@@ -509,13 +509,22 @@
 
 
 
-    const qtyInput = document.getElementById('qty');
-    qtyInput.pattern = "\\d*";  // force numeric keypad on mobile
-    qtyInput.inputMode = "numeric";
+    function preventLeadingZero(input) {
+        input.addEventListener('input', () => {
+            // Remove all leading zeros, but keep a single zero if the field is just "0"
+            input.value = input.value.replace(/^0+(\d+)/, '$1');
+        });
+    }
 
+    // Apply to your inputs
+    const qtyInput = document.getElementById('qty');
     const priceInput = document.getElementById('price');
-    priceInput.pattern = "\\d*";
-    priceInput.inputMode = "numeric";
+    const payInput = document.getElementById('pay-amount');
+
+    preventLeadingZero(qtyInput);
+    preventLeadingZero(priceInput);
+    preventLeadingZero(payInput);
+
 
 
 
