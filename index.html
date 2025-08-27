@@ -175,47 +175,44 @@
         }
 
         /* Individual cart item card */
-.cart-card {
-    background: #ffffff; /* bright white for contrast */
-    border-radius: 10px;
-    padding: 12px 15px;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-    position: relative;
-    transition: transform 0.15s, box-shadow 0.15s;
-}
-
-/* Add subtle hover effect for modern feel */
-.cart-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.12);
-}
+        .cart-card {
+            background: #ffffff;
+            /* bright white for contrast */
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            position: relative;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
 
 
-.cart-card .top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
 
-.cart-card .bottom-row {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-    font-size: 14px;
-    color: #555;
-}
 
-.cart-card .remove-btn {
-    background: none;
-    border: none;
-    color: #dc3545;
-    cursor: pointer;
-    font-size: 16px;
-}
+        .cart-card .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .cart-card .bottom-row {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .cart-card .remove-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 16px;
+        }
     </style>
 
 </head>
@@ -256,7 +253,13 @@
             <div id="cart-staff" style="font-weight:bold; margin-bottom:10px;"></div>
             <!-- Item cards will go here -->
         </div>
-        <button class="btn btn-success" onclick="checkout()">ชำระเงิน</button>
+        <div id="total-summary"
+            style="font-size: 22px; font-weight: bold; text-align: right; margin-bottom: 10px; padding-bottom: 5px;">
+            <span style="color: #555;">ยอดที่ต้องชำระ :</span>
+            <span id="total-amount" style="color: #28a745">0 ฿</span>
+        </div>
+
+        <button class="btn btn-success" onclick="checkout()">สรุปรายการ</button>
     </div>
 
     <!-- Payment section -->
@@ -269,7 +272,89 @@
         <button class="btn btn-send" onclick="uploadSlip()">Send</button>
     </div>
 
-    <script src="script.js"></script>
+
+
+    <!-- Add at the end of <body> -->
+    <div id="checkout-overlay" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+">
+        <div style="
+        background: #fff;
+        padding: 25px 30px;
+        border-radius: 12px;
+        max-width: 350px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    ">
+            <div style="font-size: 16px; color: #555;">ยอดที่ต้องชำระ</div>
+            <div id="overlay-total" style="font-size: 18px; color: green; font-weight: bold; margin-bottom: 15px;">0 ฿
+            </div>
+            <hr style="margin: 15px 0;">
+            <div style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">ชำระจริง</div>
+            <div style="position: relative; width: 100%; display: inline-block;">
+    <input id="pay-amount" type="number" style="
+        width: 100%;
+        padding: 12px 35px 12px 12px; /* space on right for icon */
+        font-size: 22px;
+        font-weight: bold;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        text-align: right;
+        margin-bottom: 15px;
+    ">
+    <!-- overlay icon -->
+    <span style="
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-80%);
+        font-size: 22px;
+        font-weight: bold;
+        color: #555;
+        pointer-events: none; /* prevents user from selecting icon */
+    ">฿</span>
+</div>
+
+        
+            <button class="btn btn-success" style="font-size: 18px; padding: 12px;"
+                onclick="confirmPayment()">ชำระเงิน</button>
+        </div>
+    </div>
+
+    <!-- Add a hidden overlay for alerts -->
+<div id="alert-overlay" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+">
+    <div style="
+        background: #fff;
+        padding: 20px 25px;
+        border-radius: 12px;
+        max-width: 300px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    ">
+        <div style="font-size:22px; color:#ff0000; margin-bottom:15px;">
+            ยอดรวมเป็น 0 ฿ ไม่สามารถชำระเงินได้
+        </div>
+        <button class="btn btn-success" style="padding:10px 15px;" onclick="closeAlert()">ตกลง</button>
+    </div>
+</div>
 </body>
 <script>
     const qtyInput = document.getElementById('qty');
@@ -282,6 +367,16 @@
 
 
 
+    const totalSummary = document.getElementById('total-summary');
+
+    function updateTotal() {
+        const priceElements = document.querySelectorAll('#cart .bottom-row span:first-child');
+        let total = 0;
+        priceElements.forEach(el => {
+            total += Number(el.textContent);
+        });
+        document.getElementById('total-amount').textContent = `${total} ฿`;
+    }
 
 
 
@@ -290,189 +385,226 @@
 
 
     function updateCartNumbers() {
-    const cards = document.querySelectorAll('#cart .cart-card');
-    cards.forEach((card, index) => {
-        const topRow = card.querySelector('.top-row span');
-        const itemNameText = topRow.textContent.split('. ').slice(1).join('. '); // remove old number
-        topRow.textContent = `${index + 1}. ${itemNameText}`;
-    });
+        const cards = document.querySelectorAll('#cart .cart-card');
+        cards.forEach((card, index) => {
+            const topRow = card.querySelector('.top-row span');
+            const itemNameText = topRow.textContent.split('. ').slice(1).join('. '); // remove old number
+            topRow.textContent = `${index + 1}. ${itemNameText}`;
+        });
+    }
+
+    function addToCart() {
+        const staffInput = document.getElementById('staff');
+        const itemInput = document.getElementById('item');
+        const qtyInput = document.getElementById('qty');
+        const priceInput = document.getElementById('price');
+
+        // Validation
+        [staffInput, itemInput, qtyInput, priceInput].forEach(i => i.setCustomValidity(""));
+        if (!staffInput.value.trim()) staffInput.setCustomValidity("กรุณากรอกชื่อผู้ขาย");
+        if (!itemInput.value.trim()) itemInput.setCustomValidity("กรุณากรอกชื่อสินค้า");
+        if (!qtyInput.value || Number(qtyInput.value) <= 0) qtyInput.setCustomValidity("จำนวนต้องมากกว่า 0");
+        if (!priceInput.value || Number(priceInput.value) <= 0) priceInput.setCustomValidity("ราคาต้องมากกว่า 0");
+        if (!staffInput.checkValidity()) { staffInput.reportValidity(); return; }
+        if (!itemInput.checkValidity()) { itemInput.reportValidity(); return; }
+        if (!qtyInput.checkValidity()) { qtyInput.reportValidity(); return; }
+        if (!priceInput.checkValidity()) { priceInput.reportValidity(); return; }
+
+        // Show staff at top
+        const cartStaff = document.getElementById('cart-staff');
+        cartStaff.textContent = `ผู้ขาย: ${staffInput.value}`;
+
+        // Count current items in cart
+        const currentCards = document.querySelectorAll('#cart .cart-card');
+        const itemNumber = currentCards.length + 1;
+
+        // Add item card
+        const cart = document.getElementById('cart');
+        const card = document.createElement('div');
+        card.classList.add('cart-card');
+
+        // Top row: item number + name + remove
+        const topRow = document.createElement('div');
+        topRow.classList.add('top-row');
+        const itemName = document.createElement('span');
+        itemName.textContent = `${itemNumber}. ${itemInput.value}`;
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        removeBtn.style.width = '28px';
+        removeBtn.style.height = '28px';
+        removeBtn.style.borderRadius = '50%';
+        removeBtn.style.border = 'none';
+        removeBtn.style.background = '#ff4d4f'; // red color
+        removeBtn.style.color = '#fff';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.style.display = 'flex';
+        removeBtn.style.alignItems = 'center';
+        removeBtn.style.justifyContent = 'center';
+        removeBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+        removeBtn.style.transition = 'all 0.2s';
+        removeBtn.onmouseover = () => { removeBtn.style.transform = 'scale(1.1)'; removeBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.25)'; };
+        removeBtn.onmouseout = () => { removeBtn.style.transform = 'scale(1)'; removeBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)'; };
+
+        removeBtn.onclick = () => {
+            card.remove();
+            updateCartNumbers();
+            updateTotal(); // <-- add this
+        };
+        topRow.appendChild(itemName);
+        topRow.appendChild(removeBtn);
+
+        // Bottom row: quantity and total price
+        const bottomRow = document.createElement('div');
+        bottomRow.classList.add('bottom-row');
+
+        // Inside addToCart()
+
+        const unitPrice = Number(priceInput.value); // store unit price for this card
+
+        // Row 2: quantity with - and + buttons
+        const qtyRow = document.createElement('div');
+        qtyRow.style.display = 'flex';
+        qtyRow.style.alignItems = 'center';
+        qtyRow.style.justifyContent = 'center';  // <-- center horizontally
+        qtyRow.style.gap = '8px';
+        qtyRow.style.alignSelf = 'center'; // <-- CENTERED horizontally
+
+        // Minus button
+        const minusBtn = document.createElement('button');
+        minusBtn.innerHTML = '<i class="fa-solid fa-minus"></i>';
+        minusBtn.style.width = '32px';
+        minusBtn.style.height = '32px';
+        minusBtn.style.borderRadius = '50%';
+        minusBtn.style.border = '1px solid #ccc';
+        minusBtn.style.background = '#fff';
+        minusBtn.style.cursor = 'pointer';
+        minusBtn.style.display = 'flex';
+        minusBtn.style.alignItems = 'center';
+        minusBtn.style.justifyContent = 'center';
+        minusBtn.style.transition = 'all 0.2s';
+        minusBtn.onmouseover = () => { minusBtn.style.background = '#f0f0f0'; minusBtn.style.transform = 'scale(1.1)'; };
+        minusBtn.onmouseout = () => { minusBtn.style.background = '#fff'; minusBtn.style.transform = 'scale(1)'; };
+
+        const qtyValue = document.createElement('span');
+        qtyValue.textContent = qtyInput.value;
+        qtyValue.style.color = 'black';
+        qtyValue.style.fontWeight = 'bold';
+
+        // Plus button
+        const plusBtn = document.createElement('button');
+        plusBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+        plusBtn.style.width = '32px';
+        plusBtn.style.height = '32px';
+        plusBtn.style.borderRadius = '50%';
+        plusBtn.style.border = '1px solid #ccc';
+        plusBtn.style.background = '#fff';
+        plusBtn.style.cursor = 'pointer';
+        plusBtn.style.display = 'flex';
+        plusBtn.style.alignItems = 'center';
+        plusBtn.style.justifyContent = 'center';
+        plusBtn.style.transition = 'all 0.2s';
+        plusBtn.onmouseover = () => { plusBtn.style.background = '#f0f0f0'; plusBtn.style.transform = 'scale(1.1)'; };
+        plusBtn.onmouseout = () => { plusBtn.style.background = '#fff'; plusBtn.style.transform = 'scale(1)'; };
+
+        qtyRow.appendChild(minusBtn);
+        qtyRow.appendChild(qtyValue);
+        qtyRow.appendChild(plusBtn);
+
+
+        // Row 3: total price, aligned right
+        const priceRow = document.createElement('div');
+        priceRow.style.alignSelf = 'flex-end';
+
+        const priceValue = document.createElement('span');
+        priceValue.textContent = (unitPrice * Number(qtyValue.textContent));
+        priceValue.style.color = 'green';
+        //priceValue.style.fontWeight = 'bold';
+        priceValue.style.fontSize = '18px'; // <-- bigger font
+
+
+        // Replace "บาท" with icon
+        const priceIcon = document.createElement('span');
+        priceIcon.innerHTML = '฿'; // Thai Baht symbol
+        priceIcon.style.color = '#333';
+        priceIcon.style.marginLeft = '3px'; // small spacing
+
+        priceRow.appendChild(priceValue);
+        priceRow.appendChild(priceIcon);
+
+
+        // Button logic
+        minusBtn.onclick = () => {
+            let newQty = Number(qtyValue.textContent) - 1;
+            if (newQty < 1) newQty = 1;
+            qtyValue.textContent = newQty;
+            priceValue.textContent = (unitPrice * newQty);
+            updateTotal(); // <-- add this
+        };
+
+        plusBtn.onclick = () => {
+            let newQty = Number(qtyValue.textContent) + 1;
+            qtyValue.textContent = newQty;
+            priceValue.textContent = (unitPrice * newQty);
+            updateTotal(); // <-- add this
+        };
+
+        // Append to bottomRow
+        bottomRow.appendChild(qtyRow);
+        bottomRow.appendChild(priceRow);
+
+
+
+        card.appendChild(topRow);
+        card.appendChild(bottomRow);
+        cart.appendChild(card);
+        updateTotal(); // <-- add this
+
+        // Clear inputs
+        itemInput.value = '';
+        qtyInput.value = '';
+        priceInput.value = '';
+    }
+
+    function updateCartNumbers() {
+        const cards = document.querySelectorAll('#cart .cart-card');
+        cards.forEach((card, index) => {
+            const topRow = card.querySelector('.top-row span');
+            const itemNameText = topRow.textContent.split('. ').slice(1).join('. '); // remove old number
+            topRow.textContent = `${index + 1}. ${itemNameText}`;
+        });
+    }
+
+function checkout() {
+    const totalText = document.getElementById('total-amount').textContent;
+    const totalValue = Number(totalText.replace(' ฿', ''));
+
+    // Prevent checkout if total is 0 using overlay
+    if (totalValue <= 0) {
+        document.getElementById('alert-overlay').style.display = 'flex';
+        return;
+    }
+
+    const overlay = document.getElementById('checkout-overlay');
+    const overlayTotal = document.getElementById('overlay-total');
+    const payInput = document.getElementById('pay-amount');
+
+    overlayTotal.textContent = totalText;
+    payInput.value = totalValue;
+    overlay.style.display = 'flex';
 }
 
-function addToCart() {
-    const staffInput = document.getElementById('staff');
-    const itemInput = document.getElementById('item');
-    const qtyInput = document.getElementById('qty');
-    const priceInput = document.getElementById('price');
-
-    // Validation
-    [staffInput, itemInput, qtyInput, priceInput].forEach(i => i.setCustomValidity(""));
-    if (!staffInput.value.trim()) staffInput.setCustomValidity("กรุณากรอกชื่อผู้ขาย");
-    if (!itemInput.value.trim()) itemInput.setCustomValidity("กรุณากรอกชื่อสินค้า");
-    if (!qtyInput.value || Number(qtyInput.value) <= 0) qtyInput.setCustomValidity("จำนวนต้องมากกว่า 0");
-    if (!priceInput.value || Number(priceInput.value) <= 0) priceInput.setCustomValidity("ราคาต้องมากกว่า 0");
-    if (!staffInput.checkValidity()) { staffInput.reportValidity(); return; }
-    if (!itemInput.checkValidity()) { itemInput.reportValidity(); return; }
-    if (!qtyInput.checkValidity()) { qtyInput.reportValidity(); return; }
-    if (!priceInput.checkValidity()) { priceInput.reportValidity(); return; }
-
-    // Show staff at top
-    const cartStaff = document.getElementById('cart-staff');
-    cartStaff.textContent = `ผู้ขาย: ${staffInput.value}`;
-
-    // Count current items in cart
-    const currentCards = document.querySelectorAll('#cart .cart-card');
-    const itemNumber = currentCards.length + 1;
-
-    // Add item card
-    const cart = document.getElementById('cart');
-    const card = document.createElement('div');
-    card.classList.add('cart-card');
-
-    // Top row: item number + name + remove
-    const topRow = document.createElement('div');
-    topRow.classList.add('top-row');
-    const itemName = document.createElement('span');
-    itemName.textContent = `${itemNumber}. ${itemInput.value}`;
-    const removeBtn = document.createElement('button');
-removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-removeBtn.style.width = '28px';
-removeBtn.style.height = '28px';
-removeBtn.style.borderRadius = '50%';
-removeBtn.style.border = 'none';
-removeBtn.style.background = '#ff4d4f'; // red color
-removeBtn.style.color = '#fff';
-removeBtn.style.cursor = 'pointer';
-removeBtn.style.display = 'flex';
-removeBtn.style.alignItems = 'center';
-removeBtn.style.justifyContent = 'center';
-removeBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-removeBtn.style.transition = 'all 0.2s';
-removeBtn.onmouseover = () => { removeBtn.style.transform = 'scale(1.1)'; removeBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.25)'; };
-removeBtn.onmouseout = () => { removeBtn.style.transform = 'scale(1)'; removeBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)'; };
-
-    removeBtn.onclick = () => {
-        card.remove();
-        updateCartNumbers();
-    };
-    topRow.appendChild(itemName);
-    topRow.appendChild(removeBtn);
-
-    // Bottom row: quantity and total price
-const bottomRow = document.createElement('div');
-bottomRow.classList.add('bottom-row');
-
-// Inside addToCart()
-
-const unitPrice = Number(priceInput.value); // store unit price for this card
-
-// Row 2: quantity with - and + buttons
-const qtyRow = document.createElement('div');
-qtyRow.style.display = 'flex';
-qtyRow.style.alignItems = 'center';
-qtyRow.style.justifyContent = 'center';  // <-- center horizontally
-qtyRow.style.gap = '8px';
-qtyRow.style.alignSelf = 'center'; // <-- CENTERED horizontally
-
-// Minus button
-const minusBtn = document.createElement('button');
-minusBtn.innerHTML = '<i class="fa-solid fa-minus"></i>';
-minusBtn.style.width = '32px';
-minusBtn.style.height = '32px';
-minusBtn.style.borderRadius = '50%';
-minusBtn.style.border = '1px solid #ccc';
-minusBtn.style.background = '#fff';
-minusBtn.style.cursor = 'pointer';
-minusBtn.style.display = 'flex';
-minusBtn.style.alignItems = 'center';
-minusBtn.style.justifyContent = 'center';
-minusBtn.style.transition = 'all 0.2s';
-minusBtn.onmouseover = () => { minusBtn.style.background = '#f0f0f0'; minusBtn.style.transform = 'scale(1.1)'; };
-minusBtn.onmouseout = () => { minusBtn.style.background = '#fff'; minusBtn.style.transform = 'scale(1)'; };
-
-const qtyValue = document.createElement('span');
-qtyValue.textContent = qtyInput.value;
-qtyValue.style.color = 'black';
-qtyValue.style.fontWeight = 'bold';
-
-// Plus button
-const plusBtn = document.createElement('button');
-plusBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
-plusBtn.style.width = '32px';
-plusBtn.style.height = '32px';
-plusBtn.style.borderRadius = '50%';
-plusBtn.style.border = '1px solid #ccc';
-plusBtn.style.background = '#fff';
-plusBtn.style.cursor = 'pointer';
-plusBtn.style.display = 'flex';
-plusBtn.style.alignItems = 'center';
-plusBtn.style.justifyContent = 'center';
-plusBtn.style.transition = 'all 0.2s';
-plusBtn.onmouseover = () => { plusBtn.style.background = '#f0f0f0'; plusBtn.style.transform = 'scale(1.1)'; };
-plusBtn.onmouseout = () => { plusBtn.style.background = '#fff'; plusBtn.style.transform = 'scale(1)'; };
-
-qtyRow.appendChild(minusBtn);
-qtyRow.appendChild(qtyValue);
-qtyRow.appendChild(plusBtn);
-
-
-// Row 3: total price, aligned right
-const priceRow = document.createElement('div');
-priceRow.style.alignSelf = 'flex-end';
-
-const priceValue = document.createElement('span');
-priceValue.textContent = (unitPrice * Number(qtyValue.textContent));
-priceValue.style.color = 'green';
-priceValue.style.fontWeight = 'bold';
-
-// Replace "บาท" with icon
-const priceIcon = document.createElement('span');
-priceIcon.innerHTML = '฿'; // Thai Baht symbol
-priceIcon.style.color = '#333';
-priceIcon.style.marginLeft = '3px'; // small spacing
-
-priceRow.appendChild(priceValue);
-priceRow.appendChild(priceIcon);
-
-
-// Button logic
-minusBtn.onclick = () => {
-    let newQty = Number(qtyValue.textContent) - 1;
-    if (newQty < 1) newQty = 1;
-    qtyValue.textContent = newQty;
-    priceValue.textContent = (unitPrice * newQty);
-};
-
-plusBtn.onclick = () => {
-    let newQty = Number(qtyValue.textContent) + 1;
-    qtyValue.textContent = newQty;
-    priceValue.textContent = (unitPrice * newQty);
-};
-
-// Append to bottomRow
-bottomRow.appendChild(qtyRow);
-bottomRow.appendChild(priceRow);
-
-
-
-    card.appendChild(topRow);
-    card.appendChild(bottomRow);
-    cart.appendChild(card);
-
-    // Clear inputs
-    itemInput.value = '';
-    qtyInput.value = '';
-    priceInput.value = '';
+function closeAlert() {
+    document.getElementById('alert-overlay').style.display = 'none';
 }
 
-function updateCartNumbers() {
-    const cards = document.querySelectorAll('#cart .cart-card');
-    cards.forEach((card, index) => {
-        const topRow = card.querySelector('.top-row span');
-        const itemNameText = topRow.textContent.split('. ').slice(1).join('. '); // remove old number
-        topRow.textContent = `${index + 1}. ${itemNameText}`;
-    });
-}
 
+
+// Close overlay after confirming payment (or you can add a cancel button)
+function confirmPayment() {
+    const payInput = document.getElementById('pay-amount');
+    alert(`ชำระเงินเรียบร้อย: ${payInput.value} ฿`);
+    document.getElementById('checkout-overlay').style.display = 'none';
+}
 
 </script>
 
