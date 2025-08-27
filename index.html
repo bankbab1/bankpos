@@ -323,34 +323,36 @@
             <div style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">ชำระจริง</div>
             <div style="position: relative; width: 100%; display: inline-block;">
                 <input id="pay-amount" type="text" inputmode="decimal" pattern="^\d+(\.\d{1,2})?$" style="
-        width: 100%;
-        padding: 12px 35px 12px 12px; /* space on right for icon */
-        font-size: 22px;
-        font-weight: bold;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        text-align: right;
-        margin-bottom: 15px;
-    ">
-
-                <!-- overlay icon -->
+                width: 100%;
+                padding: 12px 35px 12px 12px;
+                font-size: 22px;
+                font-weight: bold;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                text-align: right;
+                margin-bottom: 15px;
+            ">
                 <span style="
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-80%);
-        font-size: 22px;
-        font-weight: bold;
-        color: #555;
-        pointer-events: none; /* prevents user from selecting icon */
-    ">฿</span>
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                transform: translateY(-80%);
+                font-size: 22px;
+                font-weight: bold;
+                color: #555;
+                pointer-events: none;
+            ">฿</span>
             </div>
 
-
-            <button class="btn btn-success" style="font-size: 18px; padding: 12px;"
+            <button class="btn btn-success" style="font-size: 18px; padding: 12px; margin-bottom: 10px;"
                 onclick="confirmPayment()">ชำระเงิน</button>
+
+            <!-- Cancel button -->
+            <button class="btn" style="font-size: 18px; padding: 12px; background-color: #dc3545; margin-top: 0;"
+                onclick="closeCheckoutOverlay()">ยกเลิก</button>
         </div>
     </div>
+
 
     <!-- Add a hidden overlay for alerts -->
     <div id="alert-overlay" style="
@@ -659,6 +661,10 @@
         overlayTotal.textContent = totalText;
         payInput.value = totalValue;
         overlay.style.display = 'flex';
+    }
+
+    function closeCheckoutOverlay() {
+        document.getElementById('checkout-overlay').style.display = 'none';
     }
 
     function closeAlert() {
