@@ -84,40 +84,43 @@
         }
 
         /* Base button style */
-.btn {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.3s;
-}
+        .btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
 
-/* Add to Cart (blue) */
-.btn-add {
-    background-color: #007bff;
-}
-.btn-add:hover {
-    background-color: #0056b3;
-}
+        /* Add to Cart (blue) */
+        .btn-add {
+            background-color: #007bff;
+        }
 
-/* Checkout (green/success) */
-.btn-success {
-    background-color: #28a745;
-}
-.btn-success:hover {
-    background-color: #218838;
-}
+        .btn-add:hover {
+            background-color: #0056b3;
+        }
 
-/* Send (orange) */
-.btn-send {
-    background-color: #fd7e14;
-}
-.btn-send:hover {
-    background-color: #e8590c;
-}
+        /* Checkout (green/success) */
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        /* Send (orange) */
+        .btn-send {
+            background-color: #fd7e14;
+        }
+
+        .btn-send:hover {
+            background-color: #e8590c;
+        }
 
         #cart {
             list-style: none;
@@ -170,6 +173,40 @@
                 margin-bottom: 0;
             }
         }
+
+        .cart-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.cart-card .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.cart-card .bottom-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: 14px;
+    color: #555;
+}
+
+.cart-card .remove-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 16px;
+}
     </style>
 
 </head>
@@ -184,7 +221,7 @@
     <!-- HTML -->
     <div class="section">
         <label class="staff-label"><i class="fa-solid fa-user"></i> ผู้ขาย :</label>
-        <input type="text" id="staff" placeholder="ระบุชื่อผู้ขาย">
+        <input type="text" id="staff" placeholder="ระบุชื่อผู้ขาย" required>
     </div>
 
 
@@ -192,23 +229,25 @@
     <!-- Item entry section -->
     <div class="section">
         <label class="item-label"><i class="fa-solid fa-box"></i> รายการสินค้า :</label>
-        <input type="text" id="item" placeholder="ระบุรายการสินค้าที่ขาย">
+        <input type="text" id="item" placeholder="ระบุรายการสินค้าที่ขาย" required>
 
         <label class="item-label"><i class="fa-solid fa-hashtag"></i> จำนวน :</label>
-        <input type="number" id="qty" inputmode="numeric" pattern="[0-9]*" placeholder="จำนวน">
+        <input type="number" id="qty" placeholder="จำนวน" min="1" required>
 
-        <label class="item-label"><i class="fa-solid fa-money-bill"></i> ราคา :</label>
-        <input type="number" id="price" inputmode="decimal" pattern="[0-9]*" placeholder="ราคา">
+        <label class="item-label"><i class="fa-solid fa-money-bill"></i> ราคา (ต่อชิ้น) :</label>
+        <input type="number" id="price" placeholder="ราคา" min="1" required>
 
-
-<button class="btn btn-add" onclick="addToCart()">เพิ่ม</button>
+        <button class="btn btn-add" onclick="addToCart()">เพิ่ม</button>
     </div>
 
     <!-- Cart section -->
     <div class="section">
         <h3>Cart</h3>
-        <ul id="cart"></ul>
-<button class="btn btn-success" onclick="checkout()">ชำระเงิน</button>
+        <div id="cart">
+            <div id="cart-staff" style="font-weight:bold; margin-bottom:10px;"></div>
+            <!-- Item cards will go here -->
+        </div>
+        <button class="btn btn-success" onclick="checkout()">ชำระเงิน</button>
     </div>
 
     <!-- Payment section -->
@@ -218,7 +257,7 @@
     <div class="section" id="uploadDiv" style="display:none;">
         <label>Upload Payment Slip:</label>
         <input type="file" id="paymentSlip">
-<button class="btn btn-send" onclick="uploadSlip()">Send</button>
+        <button class="btn btn-send" onclick="uploadSlip()">Send</button>
     </div>
 
     <script src="script.js"></script>
@@ -230,7 +269,127 @@
 
     const priceInput = document.getElementById('price');
     priceInput.pattern = "\\d*";
-    priceInput.inputMode = "decimal";
+    priceInput.inputMode = "numeric";
+
+
+
+
+
+
+
+    let itemCount = 0; // count items added
+
+
+    function updateCartNumbers() {
+    const cards = document.querySelectorAll('#cart .cart-card');
+    cards.forEach((card, index) => {
+        const topRow = card.querySelector('.top-row span');
+        const itemNameText = topRow.textContent.split('. ').slice(1).join('. '); // remove old number
+        topRow.textContent = `${index + 1}. ${itemNameText}`;
+    });
+}
+
+function addToCart() {
+    const staffInput = document.getElementById('staff');
+    const itemInput = document.getElementById('item');
+    const qtyInput = document.getElementById('qty');
+    const priceInput = document.getElementById('price');
+
+    // Validation
+    [staffInput, itemInput, qtyInput, priceInput].forEach(i => i.setCustomValidity(""));
+    if (!staffInput.value.trim()) staffInput.setCustomValidity("กรุณากรอกชื่อผู้ขาย");
+    if (!itemInput.value.trim()) itemInput.setCustomValidity("กรุณากรอกชื่อสินค้า");
+    if (!qtyInput.value || Number(qtyInput.value) <= 0) qtyInput.setCustomValidity("จำนวนต้องมากกว่า 0");
+    if (!priceInput.value || Number(priceInput.value) <= 0) priceInput.setCustomValidity("ราคาต้องมากกว่า 0");
+    if (!staffInput.checkValidity()) { staffInput.reportValidity(); return; }
+    if (!itemInput.checkValidity()) { itemInput.reportValidity(); return; }
+    if (!qtyInput.checkValidity()) { qtyInput.reportValidity(); return; }
+    if (!priceInput.checkValidity()) { priceInput.reportValidity(); return; }
+
+    // Show staff at top
+    const cartStaff = document.getElementById('cart-staff');
+    cartStaff.textContent = `ผู้ขาย: ${staffInput.value}`;
+
+    // Count current items in cart
+    const currentCards = document.querySelectorAll('#cart .cart-card');
+    const itemNumber = currentCards.length + 1;
+
+    // Add item card
+    const cart = document.getElementById('cart');
+    const card = document.createElement('div');
+    card.classList.add('cart-card');
+
+    // Top row: item number + name + remove
+    const topRow = document.createElement('div');
+    topRow.classList.add('top-row');
+    const itemName = document.createElement('span');
+    itemName.textContent = `${itemNumber}. ${itemInput.value}`;
+    const removeBtn = document.createElement('button');
+    removeBtn.classList.add('remove-btn');
+    removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    removeBtn.onclick = () => {
+        card.remove();
+        updateCartNumbers();
+    };
+    topRow.appendChild(itemName);
+    topRow.appendChild(removeBtn);
+
+    // Bottom row: quantity and price
+const bottomRow = document.createElement('div');
+bottomRow.classList.add('bottom-row');
+
+// Quantity
+const qtyDiv = document.createElement('span');
+const qtyValue = document.createElement('span');
+qtyValue.textContent = `${qtyInput.value} `;
+qtyValue.style.color = 'orange';
+qtyValue.style.fontWeight = 'bold';
+
+const qtyUnit = document.createElement('span');
+qtyUnit.textContent = 'ชิ้น';
+qtyUnit.style.color = '#333';
+
+qtyDiv.appendChild(qtyValue);
+qtyDiv.appendChild(qtyUnit);
+
+// Price
+const priceDiv = document.createElement('span');
+const priceValue = document.createElement('span');
+priceValue.textContent = `${priceInput.value} `;
+priceValue.style.color = 'green';
+priceValue.style.fontWeight = 'bold';
+
+const priceUnit = document.createElement('span');
+priceUnit.textContent = 'บาท';
+priceUnit.style.color = '#333';
+
+priceDiv.appendChild(priceValue);
+priceDiv.appendChild(priceUnit);
+
+// Append to bottom row
+bottomRow.appendChild(qtyDiv);
+bottomRow.appendChild(priceDiv);
+
+
+    card.appendChild(topRow);
+    card.appendChild(bottomRow);
+    cart.appendChild(card);
+
+    // Clear inputs
+    itemInput.value = '';
+    qtyInput.value = '';
+    priceInput.value = '';
+}
+
+function updateCartNumbers() {
+    const cards = document.querySelectorAll('#cart .cart-card');
+    cards.forEach((card, index) => {
+        const topRow = card.querySelector('.top-row span');
+        const itemNameText = topRow.textContent.split('. ').slice(1).join('. '); // remove old number
+        topRow.textContent = `${index + 1}. ${itemNameText}`;
+    });
+}
+
 
 </script>
 
