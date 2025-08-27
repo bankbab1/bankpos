@@ -334,41 +334,73 @@ function addToCart() {
     topRow.appendChild(itemName);
     topRow.appendChild(removeBtn);
 
-    // Bottom row: quantity and price
+    // Bottom row: quantity and total price
 const bottomRow = document.createElement('div');
 bottomRow.classList.add('bottom-row');
 
-// Quantity
-const qtyDiv = document.createElement('span');
+// Inside addToCart()
+
+const unitPrice = Number(priceInput.value); // store unit price for this card
+
+// Row 2: quantity with - and + buttons
+const qtyRow = document.createElement('div');
+qtyRow.style.display = 'flex';
+qtyRow.style.alignItems = 'center';
+qtyRow.style.gap = '8px';
+
+const minusBtn = document.createElement('button');
+minusBtn.textContent = '-';
+minusBtn.style.width = '25px';
+minusBtn.style.height = '25px';
+minusBtn.style.cursor = 'pointer';
+
 const qtyValue = document.createElement('span');
-qtyValue.textContent = `${qtyInput.value} `;
+qtyValue.textContent = qtyInput.value;
 qtyValue.style.color = 'orange';
 qtyValue.style.fontWeight = 'bold';
 
-const qtyUnit = document.createElement('span');
-qtyUnit.textContent = 'ชิ้น';
-qtyUnit.style.color = '#333';
+const plusBtn = document.createElement('button');
+plusBtn.textContent = '+';
+plusBtn.style.width = '25px';
+plusBtn.style.height = '25px';
+plusBtn.style.cursor = 'pointer';
 
-qtyDiv.appendChild(qtyValue);
-qtyDiv.appendChild(qtyUnit);
+qtyRow.appendChild(minusBtn);
+qtyRow.appendChild(qtyValue);
+qtyRow.appendChild(plusBtn);
 
-// Price
-const priceDiv = document.createElement('span');
+// Row 3: total price, aligned right
+const priceRow = document.createElement('div');
+priceRow.style.alignSelf = 'flex-end';
 const priceValue = document.createElement('span');
-priceValue.textContent = `${priceInput.value} `;
+priceValue.textContent = (unitPrice * Number(qtyValue.textContent)).toFixed(2);
 priceValue.style.color = 'green';
 priceValue.style.fontWeight = 'bold';
 
 const priceUnit = document.createElement('span');
-priceUnit.textContent = 'บาท';
+priceUnit.textContent = ' บาท';
 priceUnit.style.color = '#333';
+priceRow.appendChild(priceValue);
+priceRow.appendChild(priceUnit);
 
-priceDiv.appendChild(priceValue);
-priceDiv.appendChild(priceUnit);
+// Button logic
+minusBtn.onclick = () => {
+    let newQty = Number(qtyValue.textContent) - 1;
+    if (newQty < 1) newQty = 1;
+    qtyValue.textContent = newQty;
+    priceValue.textContent = (unitPrice * newQty).toFixed(2);
+};
 
-// Append to bottom row
-bottomRow.appendChild(qtyDiv);
-bottomRow.appendChild(priceDiv);
+plusBtn.onclick = () => {
+    let newQty = Number(qtyValue.textContent) + 1;
+    qtyValue.textContent = newQty;
+    priceValue.textContent = (unitPrice * newQty).toFixed(2);
+};
+
+// Append to bottomRow
+bottomRow.appendChild(qtyRow);
+bottomRow.appendChild(priceRow);
+
 
 
     card.appendChild(topRow);
