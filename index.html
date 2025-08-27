@@ -24,6 +24,14 @@
             color: #333;
         }
 
+        h4 {
+            margin-top: 0%;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #333;
+        }
+
         .section {
             background: #fff;
             padding: 15px;
@@ -220,6 +228,20 @@
 <body>
 
     <h2>Bank POS</h2>
+    <div id="current-datetime" style="
+    text-align: center;
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 15px;
+    line-height: 1.3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+"></div>
+
+
 
     <!-- Add in <head> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -234,8 +256,8 @@
 
     <!-- Item entry section -->
     <div class="section">
-        <label class="item-label"><i class="fa-solid fa-box"></i> รายการสินค้า :</label>
-        <input type="text" id="item" placeholder="ระบุรายการสินค้าที่ขาย" required>
+        <label class="item-label"><i class="fa-solid fa-box"></i> สินค้า :</label>
+        <input type="text" id="item" placeholder="ระบุสินค้าที่ขาย" required>
 
         <label class="item-label"><i class="fa-solid fa-hashtag"></i> จำนวน :</label>
         <input type="number" id="qty" placeholder="จำนวน" min="1" required>
@@ -248,7 +270,7 @@
 
     <!-- Cart section -->
     <div class="section">
-        <h3>Cart</h3>
+        <h4>รายการสินค้า</h4>
         <div id="cart">
             <div id="cart-staff" style="font-weight:bold; margin-bottom:10px;"></div>
             <!-- Item cards will go here -->
@@ -294,13 +316,13 @@
         text-align: center;
         box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     ">
-            <div style="font-size: 16px; color: #555;">ยอดที่ต้องชำระ</div>
-            <div id="overlay-total" style="font-size: 18px; color: green; font-weight: bold; margin-bottom: 15px;">0 ฿
+            <div style="font-size: 18px; color: #555;">ยอดที่ต้องชำระ</div>
+            <div id="overlay-total" style="font-size: 20px; color: green; font-weight: bold; margin-bottom: 15px;">0 ฿
             </div>
             <hr style="margin: 15px 0;">
             <div style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">ชำระจริง</div>
             <div style="position: relative; width: 100%; display: inline-block;">
-    <input id="pay-amount" type="number" style="
+                <input id="pay-amount" type="number" style="
         width: 100%;
         padding: 12px 35px 12px 12px; /* space on right for icon */
         font-size: 22px;
@@ -310,8 +332,8 @@
         text-align: right;
         margin-bottom: 15px;
     ">
-    <!-- overlay icon -->
-    <span style="
+                <!-- overlay icon -->
+                <span style="
         position: absolute;
         right: 12px;
         top: 50%;
@@ -321,16 +343,16 @@
         color: #555;
         pointer-events: none; /* prevents user from selecting icon */
     ">฿</span>
-</div>
+            </div>
 
-        
+
             <button class="btn btn-success" style="font-size: 18px; padding: 12px;"
                 onclick="confirmPayment()">ชำระเงิน</button>
         </div>
     </div>
 
     <!-- Add a hidden overlay for alerts -->
-<div id="alert-overlay" style="
+    <div id="alert-overlay" style="
     display: none;
     position: fixed;
     inset: 0;
@@ -340,7 +362,7 @@
     justify-content: center;
     align-items: center;
 ">
-    <div style="
+        <div style="
         background: #fff;
         padding: 20px 25px;
         border-radius: 12px;
@@ -349,14 +371,59 @@
         text-align: center;
         box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     ">
-        <div style="font-size:22px; color:#ff0000; margin-bottom:15px;">
-            ยอดรวมเป็น 0 ฿ ไม่สามารถชำระเงินได้
+            <div style="font-size:22px; color:#ff0000; margin-bottom:15px;">
+                ยอดรวมเป็น 0 ฿ ไม่สามารถชำระเงินได้
+            </div>
+            <button class="btn btn-success" style="padding:10px 15px;" onclick="closeAlert()">ตกลง</button>
         </div>
-        <button class="btn btn-success" style="padding:10px 15px;" onclick="closeAlert()">ตกลง</button>
     </div>
-</div>
 </body>
 <script>
+
+
+    function updateDateTime() {
+        // Bangkok timezone offset in minutes (+7 hours)
+        const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
+
+        // Thai day names
+        const days = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+        const dayName = "วัน" + days[now.getDay()];
+
+        // DD/MM/YYYY
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yyyy = now.getFullYear();
+        const dateStr = `${dd}/${mm}/${yyyy}`;
+
+        // HH:MM:SS 24-hour
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        const timeStr = `${hh}:${min}:${ss}`;
+
+        // Sun before 12:00, Moon after 12:00
+        const hour = now.getHours();
+        const icon = (hour < 12) ? '☀️' : '🌙';
+
+        // Insert line breaks for vertical stack
+        const display = `${icon}\n${dayName}\n${dateStr}\n${timeStr}`;
+        document.getElementById('current-datetime').innerText = display;
+    }
+
+    // Initial update
+    updateDateTime();
+
+    // Update every second
+    setInterval(updateDateTime, 1000);
+
+
+
+
+
+
+
+
+
     const qtyInput = document.getElementById('qty');
     qtyInput.pattern = "\\d*";  // force numeric keypad on mobile
     qtyInput.inputMode = "numeric";
@@ -574,37 +641,37 @@
         });
     }
 
-function checkout() {
-    const totalText = document.getElementById('total-amount').textContent;
-    const totalValue = Number(totalText.replace(' ฿', ''));
+    function checkout() {
+        const totalText = document.getElementById('total-amount').textContent;
+        const totalValue = Number(totalText.replace(' ฿', ''));
 
-    // Prevent checkout if total is 0 using overlay
-    if (totalValue <= 0) {
-        document.getElementById('alert-overlay').style.display = 'flex';
-        return;
+        // Prevent checkout if total is 0 using overlay
+        if (totalValue <= 0) {
+            document.getElementById('alert-overlay').style.display = 'flex';
+            return;
+        }
+
+        const overlay = document.getElementById('checkout-overlay');
+        const overlayTotal = document.getElementById('overlay-total');
+        const payInput = document.getElementById('pay-amount');
+
+        overlayTotal.textContent = totalText;
+        payInput.value = totalValue;
+        overlay.style.display = 'flex';
     }
 
-    const overlay = document.getElementById('checkout-overlay');
-    const overlayTotal = document.getElementById('overlay-total');
-    const payInput = document.getElementById('pay-amount');
-
-    overlayTotal.textContent = totalText;
-    payInput.value = totalValue;
-    overlay.style.display = 'flex';
-}
-
-function closeAlert() {
-    document.getElementById('alert-overlay').style.display = 'none';
-}
+    function closeAlert() {
+        document.getElementById('alert-overlay').style.display = 'none';
+    }
 
 
 
-// Close overlay after confirming payment (or you can add a cancel button)
-function confirmPayment() {
-    const payInput = document.getElementById('pay-amount');
-    alert(`ชำระเงินเรียบร้อย: ${payInput.value} ฿`);
-    document.getElementById('checkout-overlay').style.display = 'none';
-}
+    // Close overlay after confirming payment (or you can add a cancel button)
+    function confirmPayment() {
+        const payInput = document.getElementById('pay-amount');
+        alert(`ชำระเงินเรียบร้อย: ${payInput.value} ฿`);
+        document.getElementById('checkout-overlay').style.display = 'none';
+    }
 
 </script>
 
