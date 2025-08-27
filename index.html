@@ -196,14 +196,34 @@
 
 
 
-
         .cart-card .top-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
+            align-items: flex-start;
+            /* top-align remove button */
+            margin-bottom: 10px;
             font-weight: bold;
+            gap: 8px;
+            /* optional spacing */
         }
+
+        .cart-card .top-row span {
+            flex: 1 1 auto;
+            /* allow growing and shrinking */
+            white-space: normal;
+            /* allow wrapping */
+            overflow-wrap: break-word;
+            /* wrap long words */
+            word-break: break-word;
+            /* extra safety */
+        }
+
+        .cart-card .top-row button {
+            flex: 0 0 auto;
+            /* don't shrink */
+            margin-left: 8px;
+        }
+
 
         .cart-card .bottom-row {
             display: flex;
@@ -220,6 +240,17 @@
             color: #dc3545;
             cursor: pointer;
             font-size: 16px;
+        }
+
+        #cart-staff {
+            font-weight: bold;
+            margin-bottom: 10px;
+            white-space: normal;
+            /* allow wrapping */
+            overflow-wrap: break-word;
+            /* wrap long words */
+            word-break: break-word;
+            /* extra safety */
         }
     </style>
 
@@ -344,14 +375,65 @@
             ">฿</span>
             </div>
 
+            <!-- Discount row -->
+            <div id="discount-row" style="font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #dc3545;">
+                ส่วนลด: <span id="total-discount">0 ฿</span>
+            </div>
+
+
             <button class="btn btn-success" style="font-size: 18px; padding: 12px; margin-bottom: 10px;"
                 onclick="confirmPayment()">ชำระเงิน</button>
 
             <!-- Cancel button -->
             <button class="btn" style="font-size: 18px; padding: 12px; background-color: #dc3545; margin-top: 0;"
                 onclick="closeCheckoutOverlay()">ยกเลิก</button>
+
+            <!-- Order Detail toggle button -->
+            <div style="text-align:center;">
+                <button id="order-detail-btn" onclick="toggleOrderDetail()" style="
+          font-size: 16px;
+          padding: 0;
+          margin-top: 30px;
+          background: none;
+          border: none;
+          color: #555;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center; /* center text + chevron */
+          gap: 5px;
+          margin-left: auto;
+          margin-right: auto;
+      ">
+                    ตรวจสอบรายการอีกครั้ง
+                    <span id="chevron" style="display:inline-block; transition: transform 0.2s;">▼</span>
+                </button>
+            </div>
+
+
+
+
+            <!-- Hidden order detail section -->
+            <div id="order-detail-section" style="
+    display: none;
+    margin-top: 15px;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    text-align: left;
+">
+                <div id="order-detail-items"></div>
+                <hr style="margin: 10px 0;">
+                <div style="text-align: right; font-weight: bold; font-size: 18px;">
+                    Total: <span id="order-detail-total">0 ฿</span>
+                </div>
+            </div>
         </div>
     </div>
+
+
 
 
     <!-- Add a hidden overlay for alerts -->
@@ -657,19 +739,136 @@
         const overlay = document.getElementById('checkout-overlay');
         const overlayTotal = document.getElementById('overlay-total');
         const payInput = document.getElementById('pay-amount');
+        const discountSpan = document.getElementById('total-discount'); // discount element
 
+        // Set overlay values
         overlayTotal.textContent = totalText;
         payInput.value = totalValue;
+        discountSpan.textContent = '0 ฿'; // reset discount
+
+        // Show overlay
         overlay.style.display = 'flex';
+
+        // Add event listener for real-time discount calculation
+        payInput.addEventListener('input', () => {
+            const paid = Number(payInput.value) || 0;
+            let discount = totalValue - paid;
+            if (discount < 0) discount = 0;
+            discountSpan.textContent = `${discount} ฿`;
+        }, { once: false }); // keep updating
     }
+
+
+
+
 
     function closeCheckoutOverlay() {
         document.getElementById('checkout-overlay').style.display = 'none';
+
+        // Auto collapse order detail
+        const section = document.getElementById('order-detail-section');
+        section.style.display = 'none';
+
+        // Reset chevron character to ▼
+        const chevron = document.getElementById('chevron');
+        chevron.textContent = '▼';
     }
+
 
     function closeAlert() {
         document.getElementById('alert-overlay').style.display = 'none';
     }
+
+
+
+
+
+
+
+
+
+    function toggleOrderDetail() {
+        const section = document.getElementById('order-detail-section');
+        const chevron = document.getElementById('chevron');
+
+        if (section.style.display === 'none' || section.style.display === '') {
+            populateOrderDetail();
+            section.style.display = 'block';
+            chevron.textContent = '▲'; // change character
+        } else {
+            section.style.display = 'none';
+            chevron.textContent = '▼'; // change character
+        }
+    }
+
+
+
+    function populateOrderDetail() {
+        const itemsDiv = document.getElementById('order-detail-items');
+        itemsDiv.innerHTML = ''; // clear previous content
+
+        const cartCards = document.querySelectorAll('#cart .cart-card');
+        let total = 0;
+
+        cartCards.forEach(card => {
+            const itemName = card.querySelector('.top-row span').textContent.split('. ').slice(1).join('. ');
+
+            // Get quantity and price
+            const qty = card.querySelector('.bottom-row div:first-child span:nth-child(2)').textContent;
+            const price = card.querySelector('.bottom-row div:last-child span:first-child').textContent;
+
+            total += Number(price);
+
+            // --- Container for each item ---
+            const itemContainer = document.createElement('div');
+            itemContainer.style.marginBottom = '10px';
+
+            // Item name row
+            const nameRow = document.createElement('div');
+            nameRow.textContent = itemName;
+            nameRow.style.fontWeight = 'bold';
+            nameRow.style.marginBottom = '4px';
+            nameRow.style.paddingRight = '20px';
+
+            // Make text wrap properly
+            nameRow.style.whiteSpace = 'normal';      // allow line breaks
+            nameRow.style.wordBreak = 'break-word';   // break long words
+            nameRow.style.overflowWrap = 'break-word'; // extra safety
+
+            // Qty + price row
+            const qtyPriceRow = document.createElement('div');
+            qtyPriceRow.style.display = 'flex';
+            qtyPriceRow.style.justifyContent = 'space-between';
+            qtyPriceRow.style.fontSize = '14px';
+
+            const qtySpan = document.createElement('span');
+            qtySpan.textContent = `x ${qty}`;
+
+            const priceSpan = document.createElement('span');
+            priceSpan.textContent = `${price} ฿`;
+
+            qtyPriceRow.appendChild(qtySpan);
+            qtyPriceRow.appendChild(priceSpan);
+
+            // Put rows together
+            itemContainer.appendChild(nameRow);
+            itemContainer.appendChild(qtyPriceRow);
+
+            itemsDiv.appendChild(itemContainer);
+        });
+
+        document.getElementById('order-detail-total').textContent = `${total} ฿`;
+    }
+
+
+
+
+
+
+
+
+
+
 
 
 
