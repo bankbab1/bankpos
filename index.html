@@ -649,7 +649,38 @@
 
     </div>
 
+
+    <div id="qr-overlay" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 12000;
+    justify-content: center;
+    align-items: center;
+">
+        <div style="
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        text-align: center;
+        max-width: 350px;
+        width: 90%;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* ✅ center QR and button */
+    ">
+            <h3>Scan to Pay</h3>
+            <div id="qrcode"></div>
+            <button class="btn btn-success" style="margin-top: 15px;" onclick="closeQROverlay()">Close</button>
+        </div>
+    </div>
+
 </body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script>
 
 
@@ -1125,14 +1156,17 @@
     }
 
 
-    // Load accounts from Google Sheet (via Apps Script web endpoint)
+    let accountsData = []; // global storage for sheet accounts
+
+    // Load accounts from Google Sheet
     function loadAccountsFromSheet() {
         const select = document.getElementById('accountSelect');
         select.innerHTML = '<option>Loading...</option>';
 
-        fetch("https://script.google.com/macros/s/AKfycbwcRL3aFPHpc7V1QrerbdtWfaDF2C3P9ty8LMpHPifRfArNAmwd7TN29cCkEK3JXQ87xQ/exec")  // replace with deployed web app URL
+        fetch("https://script.google.com/macros/s/AKfycbwcRL3aFPHpc7V1QrerbdtWfaDF2C3P9ty8LMpHPifRfArNAmwd7TN29cCkEK3JXQ87xQ/exec")
             .then(res => res.json())
             .then(data => {
+                accountsData = data; // store full data
                 select.innerHTML = '';
                 data.forEach(acc => {
                     let opt = document.createElement('option');
@@ -1148,26 +1182,185 @@
             });
     }
 
-    // Confirm Scanpay
+    // Confirm Scanpay and generate QR
     function confirmScanpay() {
-        const selected = document.getElementById('accountSelect').value;
-        if (!selected) {
+        const selectedName = document.getElementById('accountSelect').value;
+        if (!selectedName) {
             alert('กรุณาเลือกบัญชี');
             return;
         }
 
-        // Hide overlay
-        document.getElementById('scanpay-overlay').style.display = 'none';
+        const account = accountsData.find(acc => acc.display_name === selectedName);
+        if (!account) {
+            alert('Account data not found!');
+            return;
+        }
 
-        // Call your scanPay() with selected account
-        scanPay(selected);
+        const amount = document.getElementById('pay-amount').value;
+
+        // Map sheet columns to JS QR variables
+        let bankName = account.bank_name;
+        let accountType = "";
+
+        // Map sheet account_type + account_subtype to QR variable
+        if (account.account_type === "Promptpay" && account.account_subtype === "phone_number") {
+            accountType = "Phone Number";  // maps underscore sheet to JS QR format
+        } else if (account.account_type === "Promptpay" && account.account_subtype === "id_card") {
+            accountType = "ID Card";
+        } else if (account.account_type === "Maemanee") {
+            accountType = "Mae Manee";
+        } else if (account.account_type === "Kshop") {
+            accountType = "KShop Account";
+        } else if (account.account_type === "Bankaccount") {
+            accountType = "Bank Account";
+        } else {
+            console.log("Unsupported account type/subtype:", account.account_type, account.account_subtype);
+            alert("Unsupported account type/subtype: " + account.account_type + " / " + account.account_subtype);
+            return;
+        }
+
+
+        let refCode = account.ref_number;
+        console.log("Bank:", account.bank_name, "AccountType:", accountType, "RefCode:", account.ref_number, "Amount:", amount);
+
+        let qrPayload = generateQRData(bankName, accountType, refCode, amount);
+
+        // Show QR overlay
+        document.getElementById('qr-overlay').style.display = 'flex';
+        document.getElementById('qrcode').innerHTML = "";
+
+        new QRCode(document.getElementById('qrcode'), {
+            text: qrPayload,
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.L,
+        });
     }
+
+    function generateQRData(bankName, accountType, refCode, amount) {
+        amount = amount.replace(/,/g, '');
+        if (!amount.includes('.')) amount += ".00";
+
+        let rawText = "";
+        let isStandardPromptPay = false;
+
+        // SCB PromptPay
+        if (bankName === "Scb" && (accountType === "Phone Number" || accountType === "ID Card")) {
+            rawText += "00020101021153037645802TH29370016A000000677010111";
+            if (accountType === "Phone Number") {
+                rawText += "0113" + "0066" + refCode.substring(1);
+            } else {
+                rawText += "0213" + refCode;
+            }
+            isStandardPromptPay = true;
+        }
+        // KBank Bank Account
+        else if (bankName === "KBank" && accountType === "Bank Account") {
+            rawText += "00020101021129390016A0000006770101110315" + refCode + "53037645802TH";
+            isStandardPromptPay = true;
+        }
+        // Kshop 
+        else if (bankName === "KBank" && accountType === "KShop Account") {
+            refCode = refCode.trim().toUpperCase();
+            if (!refCode.startsWith("KPS004")) return "";
+            let merchantId = refCode.substring(6);
+            let hasAmount = parseFloat(amount) > 0;
+
+            rawText += "000201010211";
+            rawText += "30810016A000000677010112";
+            rawText += "0115";
+            rawText += "0107536000315010214" + merchantId; // ✅ fix 0315010214
+            rawText += "0320KPS004" + merchantId;
+
+            rawText += "31690016A000000677010113";
+            rawText += "0103";
+            rawText += "0040214" + merchantId;
+            rawText += "0420KPS004" + merchantId;
+
+            // Tag 53 fixed (C++ equivalent)
+            rawText += "5303764";
+
+
+            // Optional amount tag (C++ equivalent)
+            if (hasAmount) {
+                rawText += "54";
+                let amtStr = parseFloat(amount).toFixed(2); // ensure 2 decimals
+                let lenStr = String(amtStr.length).padStart(2, "0");
+                rawText += lenStr + amtStr;
+            }
+            rawText += "5802TH";      // country code
+
+        }
+
+        // SCB Mae Manee
+        else if (bankName === "Scb" && accountType === "Mae Manee") {
+            refCode = refCode.trim();
+            let posId = "0000000000802739";
+            let hasAmount = parseFloat(amount) > 0;
+
+            rawText += "0002010102" + (hasAmount ? "12" : "11") + "30650016A000000677010112";
+            rawText += "01150107536000102860215" + refCode;
+            rawText += "0303SCB5802TH5303764";
+
+            if (hasAmount) rawText += "54" + String(amount.length).padStart(2, '0') + amount;
+            rawText += "62200716" + posId;
+        } else {
+            return "";
+        }
+
+        // Append amount at end for standard PromptPay / BankAccount
+        if (isStandardPromptPay && parseFloat(amount) > 0) {
+            rawText += "54" + String(amount.length).padStart(2, '0') + amount;
+        }
+
+        // Append CRC16 properly
+        let crcInput = rawText + "6304";  // include the '6304' as required
+        rawText += "6304" + generateCRC16(crcInput);
+
+        // 🔹 Log rawText before returning
+        console.log("QR Raw Text:", rawText);
+        return rawText;
+    }
+
+    // Correct CRC16 (byte-wise, like C++)
+    function generateCRC16(input) {
+        const poly = 0x1021;
+        let crc = 0xFFFF;
+
+        for (let i = 0; i < input.length; i++) {
+            let byte = input.charCodeAt(i) & 0xFF; // use only lowest byte
+            crc ^= byte << 8;
+            for (let j = 0; j < 8; j++) {
+                crc = (crc & 0x8000) ? ((crc << 1) ^ poly) : (crc << 1);
+                crc &= 0xFFFF;
+            }
+        }
+
+        return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+
+
+
+
+
+
+    // Close QR overlay
+    function closeQROverlay() {
+        document.getElementById('qr-overlay').style.display = 'none';
+        document.getElementById('qrcode').innerHTML = "";
+    }
+
 
     // Back button to payment method selection
     function backtoPaymentmethod() {
         document.getElementById('scanpay-overlay').style.display = 'none';
         document.getElementById('payment-method-overlay').style.display = 'flex';
     }
+
+
 
 
 </script>
