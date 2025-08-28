@@ -252,6 +252,66 @@
             word-break: break-word;
             /* extra safety */
         }
+
+        .payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.payment-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 18px;
+    padding: 14px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    background-color: #f5f5f5;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #333;
+    position: relative; /* needed for absolute check */
+}
+
+.payment-card i {
+    font-size: 20px;
+}
+
+.check-icon {
+    position: absolute;
+    right: 14px;
+    color: #f18714;
+    font-size: 20px;
+    display: none;
+}
+
+/* Checkmark icon */
+.payment-card .check-icon {
+    position: absolute;
+    right: 14px; /* keep it inside card */
+    color: #f18714; /* blue like selected border */
+    font-size: 20px;
+    display: none;
+}
+
+.payment-card.selected .check-icon {
+    display: block;
+}
+
+/* Highlight selected */
+.payment-card.selected {
+    border-color: #f18714;
+    background-color: #e6f0ff;
+}
+
+/* Hover effect */
+.payment-card:hover {
+    background-color: #e0e0e0;
+}
+
+
     </style>
 
 </head>
@@ -382,7 +442,7 @@
 
 
             <button class="btn btn-success" style="font-size: 18px; padding: 12px; margin-bottom: 10px;"
-                onclick="confirmPayment()">ชำระเงิน</button>
+                onclick="preparePayment()">ชำระเงิน</button>
 
             <!-- Cancel button -->
             <button class="btn" style="font-size: 18px; padding: 12px; background-color: #dc3545; margin-top: 0;"
@@ -462,6 +522,63 @@
             <button class="btn btn-success" style="padding:10px 15px;" onclick="closeAlert()">ตกลง</button>
         </div>
     </div>
+
+    <!-- Payment Method Overlay -->
+<div id="payment-method-overlay" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+">
+  <div style="
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 12px;
+      max-width: 350px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  ">
+      <div style="font-size: 22px; font-weight: bold; margin-bottom: 15px;">ยอดชำระจริง</div>
+      <div style="font-size: 22px; margin-bottom: 20px; color: green; font-weight: bold">
+        <span id="pay-amount-label">0 ฿</span>
+      </div>
+
+      <!-- Payment options container -->
+<div class="payment-options">
+    <div class="payment-card" onclick="selectPayment(this, 'scan')">
+        <i class="fa-solid fa-qrcode"></i> สแกนจ่าย
+        <i class="fa-solid fa-circle-check check-icon"></i>
+
+    </div>
+
+    <div class="payment-card" onclick="selectPayment(this, 'cash')">
+        <i class="fa-solid fa-money-bill-wave"></i> เงินสด
+        <i class="fa-solid fa-circle-check check-icon"></i>
+
+    </div>
+</div>
+
+
+
+
+<!-- Separator -->
+<div style="border-top: 1px solid #ccc; margin: 15px 0;"></div>
+
+<!-- Confirm Payment button -->
+<button id="confirmPaymentBtn" class="btn btn-success" style="font-size: 18px; padding: 12px; margin-bottom: 10px;" onclick="confirmPayment()" disabled>
+    ชำระเงิน
+</button>
+
+<!-- Cancel button -->
+<button class="btn" style="font-size: 18px; padding: 12px; background-color: #dc3545; margin-top: 0;"
+    onclick="backToCheckout()">ยกเลิก</button>
+
+
 </body>
 <script>
 
@@ -505,6 +622,8 @@
 
 
 
+
+let selectedPayment = null;
 
 
 
@@ -872,12 +991,48 @@
 
 
 
-    // Close overlay after confirming payment (or you can add a cancel button)
-    function confirmPayment() {
-        const payInput = document.getElementById('pay-amount');
-        alert(`ชำระเงินเรียบร้อย: ${payInput.value} ฿`);
-        document.getElementById('checkout-overlay').style.display = 'none';
+    
+    function preparePayment() {
+    // Hide checkout overlay
+    document.getElementById('checkout-overlay').style.display = 'none';
+
+    // Show payment method overlay
+    const payInput = document.getElementById('pay-amount').value;
+    document.getElementById('pay-amount-label').textContent = payInput + " ฿";
+    document.getElementById('payment-method-overlay').style.display = 'flex';
+}
+
+function backToCheckout() {
+    // Hide payment method overlay
+    document.getElementById('payment-method-overlay').style.display = 'none';
+    // Show checkout overlay again
+    document.getElementById('checkout-overlay').style.display = 'flex';
+}
+
+function selectPayment(card, type) {
+    // Deselect previous
+    document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
+
+    // Select current
+    card.classList.add('selected');
+    selectedPayment = type;
+
+    // Enable confirm button
+    document.getElementById('confirmPaymentBtn').disabled = false;
+}
+
+function confirmPayment() {
+    if (!selectedPayment) {
+        alert('กรุณาเลือกวิธีชำระเงิน');
+        return;
     }
+
+    if (selectedPayment === 'scan') {
+        scanPay();
+    } else if (selectedPayment === 'cash') {
+        cashPay();
+    }
+}
 
 </script>
 
