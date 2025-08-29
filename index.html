@@ -737,8 +737,7 @@
                     onclick="closeQROverlay()">ยกเลิก</button>
 
                 <!-- Confirm Payment Button -->
-                <button id="confirmScanpayBtn" class="btn btn-success" style="font-size: 18px; padding: 12px; flex: 1;"
-                    onclick="confirmQrPayment()">
+                <button id="confirmQrpaidBtn" class="btn btn-success" style="font-size: 18px; padding: 12px; flex: 1;">
                     ชำระแล้ว
                 </button>
             </div>
@@ -790,13 +789,92 @@
                     style="font-size: 18px; padding: 12px; background-color: #dc3545; color: white; flex: 1;"
                     onclick="backtoPaymentmethod()">ยกเลิก</button>
 
-                <button class="btn btn-success" style="font-size: 18px; padding: 12px; flex: 1;"
-                    onclick="confirmCashPayment()">ชำระแล้ว</button>
+                <!-- Cash overlay confirm button -->
+                <button id="confirmCashpaidBtn" class="btn btn-success"
+                    style="font-size: 18px; padding: 12px; flex: 1;">
+                    ชำระแล้ว
+                </button>
             </div>
         </div>
     </div>
 
 
+
+
+    <!-- Confirmation Overlay -->
+    <div id="confirm-overlay" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(2px);
+    z-index:13000;
+    justify-content:center;
+    align-items:center;
+">
+        <div style="
+      background:#fff;
+      padding:25px 30px;
+      border-radius:12px;
+      max-width:350px;
+      width:90%;
+      text-align:center;
+      box-shadow:0 8px 20px rgba(0,0,0,0.25);
+  ">
+            <div id="confirm-message" style="font-size:20px; font-weight:bold; margin-bottom:20px;">
+                Confirm payment?
+            </div>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button onclick="cancelConfirm()"
+                    style="flex:1; padding:12px; background:#dc3545; color:white; border:none; border-radius:8px;">No</button>
+                <button onclick="yesConfirm()"
+                    style="flex:1; padding:12px; background:#28a745; color:white; border:none; border-radius:8px;">Yes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Overlay -->
+    <div id="success-overlay" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(2px);
+    z-index:13000;
+    justify-content:center;
+    align-items:center;
+">
+        <div style="
+      background:#fff;
+      padding:25px 30px;
+      border-radius:12px;
+      max-width:400px;
+      width:90%;
+      text-align:center;
+      box-shadow:0 8px 20px rgba(0,0,0,0.25);
+  ">
+            <div id="success-message" style="font-size:20px; font-weight:bold; margin-bottom:20px;">
+                Payment received!
+            </div>
+
+            <!-- QR slip section (only shows for QR) -->
+            <div id="qr-slip-section" style="display:none; margin-top:15px;">
+                <input type="file" id="paymentSlip" accept="image/*" />
+                <div style="margin-top:10px;">
+                    <label>
+                        <input type="checkbox" id="skipSlipToggle"> Skip slip upload
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <button onclick="acknowledgePayment()"
+                    style="padding:12px 20px; background:#007bff; color:white; border:none; border-radius:8px;">
+                    Acknowledged
+                </button>
+            </div>
+        </div>
+    </div>
 
 
 </body>
@@ -1298,13 +1376,16 @@
         select.style.borderColor = select.value === "" ? "#e74c3c" : "#ccc";
     });
 
+
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwcRL3aFPHpc7V1QrerbdtWfaDF2C3P9ty8LMpHPifRfArNAmwd7TN29cCkEK3JXQ87xQ/exec'; // replace with your URL
+
     // Load accounts from Google Sheet
     function loadAccountsFromSheet() {
         // show loading state
         select.innerHTML = '<option value="">Loading...</option>';
         confirmBtn.disabled = true;
 
-        fetch("https://script.google.com/macros/s/AKfycbwcRL3aFPHpc7V1QrerbdtWfaDF2C3P9ty8LMpHPifRfArNAmwd7TN29cCkEK3JXQ87xQ/exec")
+        fetch(WEB_APP_URL)
             .then(res => res.json())
             .then(data => {
                 accountsData = data;
@@ -1527,6 +1608,214 @@
     }
 
 
+
+
+
+    let currentPaymentType = ""; // "cash" or "qr"
+    let currentOrderData = {};   // Store order details temporarily
+    let cartItems = [];          // Example: populate your cart somewhere
+    let currentDiscount = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const qrConfirmBtn = document.getElementById('confirmQrpaidBtn');
+        const cashConfirmBtn = document.getElementById('confirmCashpaidBtn');
+
+        function getStaffName() {
+            const staffInput = document.getElementById('staff');
+            return staffInput ? staffInput.value.trim() : "Unknown";
+        }
+
+        if (qrConfirmBtn) {
+            qrConfirmBtn.addEventListener('click', () => {
+                currentOrderData = {
+                    items: cartItems,
+                    discount: currentDiscount,
+                    gross: calculateGross(cartItems),
+                    net: calculateNet(cartItems, currentDiscount),
+                    staff: getStaffName()  // read staff name from input
+                };
+                showConfirm('qr', currentOrderData);
+            });
+        }
+
+        if (cashConfirmBtn) {
+            cashConfirmBtn.addEventListener('click', () => {
+                currentOrderData = {
+                    items: cartItems,
+                    discount: currentDiscount,
+                    gross: calculateGross(cartItems),
+                    net: calculateNet(cartItems, currentDiscount),
+                    staff: getStaffName()  // read staff name from input
+                };
+                showConfirm('cash', currentOrderData);
+            });
+        }
+    });
+
+    // Helper: get all cart items from DOM
+    function getCartItems() {
+        const cards = document.querySelectorAll('#cart .cart-card');
+        const items = [];
+        cards.forEach(card => {
+            const name = card.querySelector('.top-row span').textContent.split('. ').slice(1).join('. ');
+            const qty = Number(card.querySelector('.bottom-row div span').textContent);
+            const price = Number(card.querySelector('.bottom-row div:nth-child(2) span').textContent);
+            items.push({ name, qty, price });
+        });
+        return items;
+    }
+
+    // Helper: calculate totals
+    function calculateGross(items) {
+        return items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+    }
+
+    function calculateNet(items, discount = 0) {
+        return calculateGross(items) - discount;
+    }
+
+    // Helper: get staff
+    function getStaffName() {
+        return document.getElementById('staff').value.trim() || 'ไม่ระบุชื่อ';
+    }
+
+    // Prepare order data and show confirmation overlay
+    function prepareOrder(paymentType) {
+        const items = getCartItems();
+        if (items.length === 0) {
+            alert('ยังไม่มีรายการสินค้า');
+            return;
+        }
+        const gross = calculateGross(items);
+        const discountText = document.getElementById('total-discount').textContent.replace(' ฿', '') || 0;
+        const discount = Number(discountText);
+        currentOrderData = {
+            items,
+            gross,
+            net: calculateNet(items, discount),
+            staff: getStaffName()
+        };
+        currentPaymentType = paymentType;
+        document.getElementById('confirm-message').textContent =
+            paymentType === 'cash' ? 'Confirm cash payment?' : 'Confirm QR payment?';
+        document.getElementById('confirm-overlay').style.display = 'flex';
+    }
+
+
+
+
+
+    // Show confirmation overlay
+    function showConfirm(paymentType, orderData) {
+        currentPaymentType = paymentType;
+        currentOrderData = orderData; // pass items, discount, total etc.
+        document.getElementById('confirm-message').textContent =
+            paymentType === "cash" ? "Confirm cash payment?" : "Confirm QR payment?";
+        document.getElementById('confirm-overlay').style.display = "flex";
+    }
+
+    // Cancel confirmation
+    function cancelConfirm() {
+        document.getElementById('confirm-overlay').style.display = "none";
+    }
+
+    // Yes confirmation
+    function yesConfirm() {
+        document.getElementById('confirm-overlay').style.display = "none";
+        // Save order to Google Sheets
+        saveOrderToSheet(currentPaymentType, currentOrderData);
+
+        // Show success overlay
+        document.getElementById('success-message').textContent = "Payment received!";
+        if (currentPaymentType === "qr") {
+            document.getElementById('qr-slip-section').style.display = "block";
+        } else {
+            document.getElementById('qr-slip-section').style.display = "none";
+        }
+        document.getElementById('success-overlay').style.display = "flex";
+    }
+
+    // Acknowledge button
+    function acknowledgePayment() {
+        if (currentPaymentType === "qr") {
+            const skipSlip = document.getElementById('skipSlipToggle').checked;
+            const fileSelected = document.getElementById('paymentSlip').files.length > 0;
+
+            if (!skipSlip && !fileSelected) {
+                alert("Please upload the slip or toggle skip.");
+                return;
+            }
+
+            if (fileSelected) {
+                uploadSlipToDrive(document.getElementById('paymentSlip').files[0], currentOrderData.order_id);
+            }
+        }
+
+        // Close overlay
+        document.getElementById('success-overlay').style.display = "none";
+        resetOrderData();
+    }
+
+    // Reset temp order data
+    function resetOrderData() {
+        currentPaymentType = "";
+        currentOrderData = {};
+        document.getElementById('paymentSlip').value = "";
+        document.getElementById('skipSlipToggle').checked = false;
+    }
+
+    async function saveOrderToSheet(paymentType, orderData) {
+        // orderData: { items:[{name,qty,price}], discount, gross, net, staff }
+        const payload = {
+            action: 'saveOrder',
+            paymentType: paymentType, // 'cash' or 'qr'
+            orderData: orderData
+        };
+
+        const res = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || 'save failed');
+        return json; // contains order_id, timestamp
+    }
+
+
+    // convert selected file to base64 (strip data: header)
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const dataUrl = reader.result;
+                const base64 = dataUrl.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = (err) => reject(err);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function uploadSlip(orderId, file) {
+        const base64 = await fileToBase64(file);
+        const payload = {
+            action: 'uploadSlip',
+            order_id: orderId,
+            filename: file.name,
+            mimeType: file.type || 'image/jpeg',
+            base64: base64
+        };
+
+        const res = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || 'upload failed');
+        return json; // contains file_url
+    }
 
 
 </script>
