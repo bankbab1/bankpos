@@ -95,7 +95,7 @@
         .btn {
             width: 100%;
             padding: 12px;
-            font-size: 16px;
+            font-size: 18px;
             border: none;
             border-radius: 8px;
             color: #fff;
@@ -370,11 +370,22 @@
 
     <!-- Cart section -->
     <div class="section">
-        <h4>รายการสินค้า</h4>
+        <!-- Cart section header with centered title and right-aligned bin icon -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="flex:1;"></div> <!-- empty left space -->
+            <h4 style="margin:0; text-align:center; flex:1;">รายการสินค้า</h4>
+            <!-- Trash icon aligned right -->
+            <div style="flex:1; text-align:right; cursor:pointer;" onclick="clearCart()">
+                <i class="fa-solid fa-trash" style="font-size:18px; color:#dc3545;"></i>
+            </div>
+        </div>
+
+
         <div id="cart">
             <div id="cart-staff" style="font-weight:bold; margin-bottom:10px;"></div>
             <!-- Item cards will go here -->
         </div>
+
         <div id="total-summary"
             style="font-size: 22px; font-weight: bold; text-align: right; margin-bottom: 10px; padding-bottom: 5px;">
             <span style="color: #555;">ยอดที่ต้องชำระ :</span>
@@ -383,6 +394,7 @@
 
         <button class="btn btn-success" onclick="checkout()">สรุปรายการ</button>
     </div>
+
 
 
 
@@ -408,7 +420,7 @@
         text-align: center;
         box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     ">
-            <div style="font-size: 18px; color: #555;">ยอดที่ต้องชำระ</div>
+            <div style="font-size: 18px; color: #555; margin-bottom:8px;">ยอดที่ต้องชำระ</div>
             <div id="overlay-total" style="font-size: 20px; color: green; font-weight: bold; margin-bottom: 15px;">0 ฿
             </div>
             <hr style="margin: 15px 0;">
@@ -511,22 +523,28 @@
     z-index: 10000;
     justify-content: center;
     align-items: center;
-    ">
+">
         <div style="
         background: #fff;
-        padding: 20px 25px;
+        padding: 25px 30px;
         border-radius: 12px;
         max-width: 300px;
         width: 90%;
         text-align: center;
         box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-        ">
-            <div style="font-size:22px; color:#ff0000; margin-bottom:15px;">
-                ยอดรวมเป็น 0 ฿ ไม่สามารถชำระเงินได้
+    ">
+            <div style="font-size:18px; color:#ff0000; margin-bottom:20px;">
+                กรุณาเพิ่มรายการสินค้าเพื่อดำเนินการต่อ
             </div>
-            <button class="btn btn-success" style="padding:10px 15px;" onclick="closeAlert()">ตกลง</button>
+            <div style="display:flex; justify-content:center;">
+                <button onclick="closeAlert()"
+                    style="font-size:18px; padding:12px; flex:1; background:#007bff; color:white; border:none; border-radius:12px;">
+                    ตกลง
+                </button>
+            </div>
         </div>
     </div>
+
 
     <!-- Payment Method Overlay -->
     <div id="payment-method-overlay" style="
@@ -857,10 +875,13 @@
       text-align:center;
       box-shadow:0 8px 20px rgba(0,0,0,0.25);
   ">
-            <div id="success-message" style="font-size:20px; font-weight:bold; margin-bottom:20px;">
+            <div id="success-message" style="font-size:20px; font-weight:bold; margin-bottom:10px;">
                 บันทึกรายการสำเร็จ!
             </div>
-            <div style="margin-top:20px; display:flex; justify-content:center; gap:10px;">
+            <div id="success-order-id" style="font-size:16px; color:#555; margin-bottom:20px;">
+                <!-- Order ID will be inserted here -->
+            </div>
+            <div style="display:flex; justify-content:center; gap:10px;">
                 <button onclick="acknowledgePayment()"
                     style="font-size:18px; padding:12px; flex:1; background:#007bff; color:white; border:none; border-radius:10px;">
                     ตกลง
@@ -870,6 +891,52 @@
     </div>
 
 
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(2px);
+    z-index:13500;
+    justify-content:center;
+    align-items:center;
+">
+        <div style="
+        background:#fff;
+        padding:20px 30px;
+        border-radius:10px;
+        text-align:center;
+        box-shadow:0 8px 20px rgba(0,0,0,0.25);
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:15px;
+    ">
+            <div class="spinner" style="
+            border:4px solid #f3f3f3;
+            border-top:4px solid #007bff;
+            border-radius:50%;
+            width:40px;
+            height:40px;
+            animation: spin 1s linear infinite;
+        "></div>
+            <div style="font-size:18px; font-weight:bold;">กำลังบันทึก...</div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 
 
 
@@ -917,6 +984,12 @@
 
 
 
+    function clearCart() {
+        const cart = document.getElementById('cart');
+        cart.querySelectorAll('.cart-card').forEach(card => card.remove());
+        // Reset total
+        document.getElementById('total-amount').textContent = '0 ฿';
+    }
 
 
 
@@ -926,12 +999,25 @@
 
 
     const qtyInput = document.getElementById('qty');
-    qtyInput.pattern = "\\d*";  // force numeric keypad on mobile
+    const priceInput = document.getElementById('price');
+
+    // Force numeric keypad on mobile
+    qtyInput.pattern = "\\d*";
     qtyInput.inputMode = "numeric";
 
-    const priceInput = document.getElementById('price');
     priceInput.pattern = "\\d*";
     priceInput.inputMode = "numeric";
+
+    // Function to remove leading zeros
+    function removeLeadingZeros(e) {
+        const value = e.target.value;
+        // Remove leading zeros, but keep '0' if user enters exactly 0
+        e.target.value = value.replace(/^0+(?=\d)/, '');
+    }
+
+    // Apply to both inputs
+    qtyInput.addEventListener('input', removeLeadingZeros);
+    priceInput.addEventListener('input', removeLeadingZeros);
 
 
 
@@ -1743,10 +1829,15 @@
 
     // Yes confirmation
     function yesConfirm() {
+        console.log('yesConfirm triggered'); // User clicked "ใช่"
+
         document.getElementById('confirm-overlay').style.display = "none";
 
         const items = getCartItems();
+        console.log('Cart items:', items);
+
         if (items.length === 0) {
+            console.warn('No items in cart');
             alert('ยังไม่มีรายการสินค้า');
             return;
         }
@@ -1754,10 +1845,10 @@
         const gross = Number(document.getElementById('overlay-total').textContent.replace(' ฿', '') || 0);
         const discount = Number(document.getElementById('total-discount').textContent.replace(' ฿', '') || 0);
         const net = Number(document.getElementById('qr-pay-amount-label').textContent.replace(' ฿', '') || 0);
-
         const selectedAccount = document.getElementById('accountSelect').value;
+
         currentOrderData = {
-            items: items,
+            items,
             gross,
             discount,
             net,
@@ -1765,17 +1856,43 @@
             receiver_account: (currentPaymentType === "cash") ? "CASH" : selectedAccount
         };
 
+        console.log('Order data prepared:', currentOrderData);
+
+        const loadingEl = document.getElementById('loading-overlay');
+        loadingEl.style.display = "flex";
+        console.log('Loading overlay displayed');
+
+        // Optional timeout for network issues
+        const timeoutId = setTimeout(() => {
+            loadingEl.style.display = "none";
+            console.error('Timeout: Saving order took too long');
+            alert('ไม่สามารถบันทึกรายการได้: โปรดตรวจสอบการเชื่อมต่อและลองใหม่');
+        }, 15000); // 15 seconds
+
+        console.log('Sending data to saveOrderToSheet...');
         saveOrderToSheet(currentPaymentType, currentOrderData)
             .then(result => {
+                clearTimeout(timeoutId);
+                loadingEl.style.display = "none";
+
                 currentOrderData.order_id = result.order_id;
+                console.log('Order saved successfully:', result);
 
                 // Show success overlay
                 document.getElementById('success-message').textContent = "บันทึกรายการสำเร็จ!";
+                document.getElementById('success-order-id').textContent = "Order: " + result.order_id;
                 document.getElementById('success-overlay').style.display = "flex";
-
             })
-            .catch(err => alert('Error saving order: ' + err));
+            .catch(err => {
+                clearTimeout(timeoutId);
+                loadingEl.style.display = "none";
+                console.error('Error saving order:', err);
+                alert('Error saving order: ' + err);
+            });
+
     }
+
+
 
 
 
