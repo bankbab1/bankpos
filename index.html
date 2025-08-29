@@ -815,20 +815,24 @@
         <div style="
       background:#fff;
       padding:25px 30px;
-      border-radius:12px;
+      border-radius:10px;
       max-width:350px;
       width:90%;
       text-align:center;
       box-shadow:0 8px 20px rgba(0,0,0,0.25);
   ">
             <div id="confirm-message" style="font-size:20px; font-weight:bold; margin-bottom:20px;">
-                Confirm payment?
+                ได้รับเงินถูกต้อง?
             </div>
             <div style="display:flex; gap:10px; justify-content:center;">
                 <button onclick="cancelConfirm()"
-                    style="flex:1; padding:12px; background:#dc3545; color:white; border:none; border-radius:8px;">No</button>
+                    style="font-size:18px; padding:12px; flex:1; background:#dc3545; color:white; border:none; border-radius:10px;">
+                    ไม่ใช่
+                </button>
                 <button onclick="yesConfirm()"
-                    style="flex:1; padding:12px; background:#28a745; color:white; border:none; border-radius:8px;">Yes</button>
+                    style="font-size:18px; padding:12px; flex:1; background:#28a745; color:white; border:none; border-radius:10px;">
+                    ใช่
+                </button>
             </div>
         </div>
     </div>
@@ -847,34 +851,26 @@
         <div style="
       background:#fff;
       padding:25px 30px;
-      border-radius:12px;
+      border-radius:10px;
       max-width:400px;
       width:90%;
       text-align:center;
       box-shadow:0 8px 20px rgba(0,0,0,0.25);
   ">
             <div id="success-message" style="font-size:20px; font-weight:bold; margin-bottom:20px;">
-                Payment received!
+                บันทึกรายการสำเร็จ!
             </div>
-
-            <!-- QR slip section (only shows for QR) -->
-            <div id="qr-slip-section" style="display:none; margin-top:15px;">
-                <input type="file" id="paymentSlip" accept="image/*" />
-                <div style="margin-top:10px;">
-                    <label>
-                        <input type="checkbox" id="skipSlipToggle"> Skip slip upload
-                    </label>
-                </div>
-            </div>
-
-            <div style="margin-top:20px;">
+            <div style="margin-top:20px; display:flex; justify-content:center; gap:10px;">
                 <button onclick="acknowledgePayment()"
-                    style="padding:12px 20px; background:#007bff; color:white; border:none; border-radius:8px;">
-                    Acknowledged
+                    style="font-size:18px; padding:12px; flex:1; background:#007bff; color:white; border:none; border-radius:10px;">
+                    ตกลง
                 </button>
             </div>
         </div>
     </div>
+
+
+
 
 
 </body>
@@ -1659,11 +1655,12 @@
         cards.forEach(card => {
             const name = card.querySelector('.top-row span').textContent.split('. ').slice(1).join('. ');
             const qty = Number(card.querySelector('.bottom-row div span').textContent);
-            const price = Number(card.querySelector('.bottom-row div:nth-child(2) span').textContent);
-            items.push({ name, qty, price });
+            items.push({ name, qty }); // price removed
         });
         return items;
     }
+
+
 
     // Helper: calculate totals
     function calculateGross(items) {
@@ -1686,20 +1683,37 @@
             alert('ยังไม่มีรายการสินค้า');
             return;
         }
-        const gross = calculateGross(items);
-        const discountText = document.getElementById('total-discount').textContent.replace(' ฿', '') || 0;
-        const discount = Number(discountText);
+
+        const overlayTotal = document.getElementById('overlay-total');
+        const payInput = document.getElementById('qr-pay-amount-label'); // net amount
+        const discountSpan = document.getElementById('total-discount');
+
+        const gross = Number(overlayTotal.textContent.replace(' ฿', '') || 0);
+        const discount = Number(discountSpan.textContent.replace(' ฿', '') || 0);
+        const net = Number(payInput.textContent.replace(' ฿', '') || 0);
+
         currentOrderData = {
             items,
             gross,
-            net: calculateNet(items, discount),
+            discount,
+            net,
             staff: getStaffName()
         };
         currentPaymentType = paymentType;
-        document.getElementById('confirm-message').textContent =
-            paymentType === 'cash' ? 'Confirm cash payment?' : 'Confirm QR payment?';
+
+        // Update confirm message dynamically
+        const confirmMessageEl = document.getElementById('confirm-message');
+
+        if (paymentType === 'cash') {
+            confirmMessageEl.textContent = 'ได้รับเงินถูกต้อง?';
+        } else {
+            // For non-cash (QR/transfer)
+            confirmMessageEl.innerHTML = '<span style="display:block; margin-bottom:8px;">ได้รับเงินถูกต้อง?</span><span style="color:red; font-size:14px;">กรุณาถ่ายภาพสลิปโอนเงินจากลูกค้า</span>';
+        }
+
         document.getElementById('confirm-overlay').style.display = 'flex';
     }
+
 
 
 
@@ -1709,8 +1723,16 @@
     function showConfirm(paymentType, orderData) {
         currentPaymentType = paymentType;
         currentOrderData = orderData; // pass items, discount, total etc.
-        document.getElementById('confirm-message').textContent =
-            paymentType === "cash" ? "Confirm cash payment?" : "Confirm QR payment?";
+        // Update confirm message dynamically
+        const confirmMessageEl = document.getElementById('confirm-message');
+
+        if (paymentType === 'cash') {
+            confirmMessageEl.textContent = 'ได้รับเงินถูกต้อง?';
+        } else {
+            // For non-cash (QR/transfer)
+            confirmMessageEl.innerHTML = '<span style="display:block; margin-bottom:8px;">ได้รับเงินถูกต้อง?</span><span style="color:red; font-size:14px;">กรุณาถ่ายภาพสลิปโอนเงินจากลูกค้า</span>';
+        }
+
         document.getElementById('confirm-overlay').style.display = "flex";
     }
 
@@ -1722,100 +1744,108 @@
     // Yes confirmation
     function yesConfirm() {
         document.getElementById('confirm-overlay').style.display = "none";
-        // Save order to Google Sheets
-        saveOrderToSheet(currentPaymentType, currentOrderData);
 
-        // Show success overlay
-        document.getElementById('success-message').textContent = "Payment received!";
-        if (currentPaymentType === "qr") {
-            document.getElementById('qr-slip-section').style.display = "block";
-        } else {
-            document.getElementById('qr-slip-section').style.display = "none";
+        const items = getCartItems();
+        if (items.length === 0) {
+            alert('ยังไม่มีรายการสินค้า');
+            return;
         }
-        document.getElementById('success-overlay').style.display = "flex";
+
+        const gross = Number(document.getElementById('overlay-total').textContent.replace(' ฿', '') || 0);
+        const discount = Number(document.getElementById('total-discount').textContent.replace(' ฿', '') || 0);
+        const net = Number(document.getElementById('qr-pay-amount-label').textContent.replace(' ฿', '') || 0);
+
+        const selectedAccount = document.getElementById('accountSelect').value;
+        currentOrderData = {
+            items: items,
+            gross,
+            discount,
+            net,
+            staff: document.getElementById('staff').value.trim() || 'ไม่ระบุชื่อ',
+            receiver_account: (currentPaymentType === "cash") ? "CASH" : selectedAccount
+        };
+
+        saveOrderToSheet(currentPaymentType, currentOrderData)
+            .then(result => {
+                currentOrderData.order_id = result.order_id;
+
+                // Show success overlay
+                document.getElementById('success-message').textContent = "บันทึกรายการสำเร็จ!";
+                document.getElementById('success-overlay').style.display = "flex";
+
+            })
+            .catch(err => alert('Error saving order: ' + err));
     }
+
+
+
+
 
     // Acknowledge button
     function acknowledgePayment() {
-        if (currentPaymentType === "qr") {
-            const skipSlip = document.getElementById('skipSlipToggle').checked;
-            const fileSelected = document.getElementById('paymentSlip').files.length > 0;
+        // Hide all overlays
+        const overlays = ['success-overlay', 'qr-overlay', 'cashpay-overlay', 'confirm-overlay', 'scanpay-overlay', 'payment-method-overlay', 'checkout-overlay'];
+        overlays.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "none";
+        });
 
-            if (!skipSlip && !fileSelected) {
-                alert("Please upload the slip or toggle skip.");
-                return;
-            }
-
-            if (fileSelected) {
-                uploadSlipToDrive(document.getElementById('paymentSlip').files[0], currentOrderData.order_id);
-            }
-        }
-
-        // Close overlay
-        document.getElementById('success-overlay').style.display = "none";
+        // Reset order data
         resetOrderData();
     }
+
 
     // Reset temp order data
     function resetOrderData() {
         currentPaymentType = "";
         currentOrderData = {};
-        document.getElementById('paymentSlip').value = "";
-        document.getElementById('skipSlipToggle').checked = false;
+
+        // Clear cart items
+        const cart = document.getElementById('cart');
+        cart.querySelectorAll('.cart-card').forEach(card => card.remove());
+
+        // Reset total
+        const totalAmount = document.getElementById('total-amount');
+        totalAmount.textContent = "0 ฿";
+
+        // Reset item count (if you use a separate counter)
+        itemCount = 0;
     }
 
-    async function saveOrderToSheet(paymentType, orderData) {
-        // orderData: { items:[{name,qty,price}], discount, gross, net, staff }
-        const payload = {
-            action: 'saveOrder',
-            paymentType: paymentType, // 'cash' or 'qr'
-            orderData: orderData
-        };
-
-        const res = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || 'save failed');
-        return json; // contains order_id, timestamp
-    }
-
-
-    // convert selected file to base64 (strip data: header)
-    function fileToBase64(file) {
+    function jsonpRequest(params) {
         return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const dataUrl = reader.result;
-                const base64 = dataUrl.split(',')[1];
-                resolve(base64);
+            const callbackName = 'jsonp_cb_' + Date.now();
+            window[callbackName] = function (result) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                resolve(result);
             };
-            reader.onerror = (err) => reject(err);
-            reader.readAsDataURL(file);
+
+            params.callback = callbackName;
+            const query = new URLSearchParams(params).toString();
+            const script = document.createElement('script');
+            script.src = WEB_APP_URL + '?' + query;
+            script.onerror = () => {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                reject(new Error('JSONP request failed'));
+            };
+            document.body.appendChild(script);
         });
     }
 
-    async function uploadSlip(orderId, file) {
-        const base64 = await fileToBase64(file);
-        const payload = {
-            action: 'uploadSlip',
-            order_id: orderId,
-            filename: file.name,
-            mimeType: file.type || 'image/jpeg',
-            base64: base64
-        };
-
-        const res = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+    // Save order using JSONP
+    function saveOrderToSheet(paymentType, orderData) {
+        return jsonpRequest({
+            action: 'saveOrder',
+            paymentType,
+            receiverAccount: orderData.receiver_account || '',
+            orderData: JSON.stringify(orderData)
         });
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || 'upload failed');
-        return json; // contains file_url
     }
+
+
+
 
 
 </script>
