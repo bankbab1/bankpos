@@ -654,24 +654,37 @@
 ">
         <div style="
         background: #fff;
-        padding: 25px;
+        padding: 25px 30px;
         border-radius: 12px;
-        text-align: center;
         max-width: 350px;
         width: 90%;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
         display: flex;
         flex-direction: column;
-        align-items: center; /* ✅ center QR and button */
+        align-items: center;
     ">
-            <h3>Scan to Pay</h3>
+            <!-- Header (match Select Account style) -->
+            <div style="font-size: 20px; font-weight: bold; margin-bottom: 15px;">
+                Scan to Pay
+            </div>
 
             <!-- Thai QR Icon -->
             <div style="text-align: center; margin-bottom: 10px;">
-                <img src="th_qr_icon.png" alt="Thai QR Icon" style="width: 80px; height: auto;">
+                <img src="th_qr_icon.png" alt="Thai QR Icon" style="width: 300px; height: auto;">
             </div>
 
             <!-- QR Code -->
             <div id="qrcode" style="text-align: center;"></div>
+
+            <!-- Receiver name -->
+            <div id="qr-receiver-label" style="font-size: 16px; color: #444; margin-top: 12px; margin-bottom: 4px;">
+            </div>
+
+            <!-- Amount display -->
+            <div id="qr-pay-amount-label"
+                style="font-size: 18px; font-weight: bold; margin-top: 15px; margin-bottom: 10px;">
+            </div>
 
             <!-- Button -->
             <div style="text-align: center; margin-top: 15px;">
@@ -679,6 +692,7 @@
             </div>
         </div>
     </div>
+
 
 </body>
 
@@ -1201,6 +1215,10 @@
 
         const amount = document.getElementById('pay-amount').value;
 
+        // 🟢 Set receiver name
+        document.getElementById('qr-receiver-label').textContent = account.account_name;
+
+
         // Map sheet columns to JS QR variables
         let bankName = account.bank_name;
         let accountType = "";
@@ -1229,6 +1247,10 @@
         let qrPayload = generateQRData(bankName, accountType, refCode, amount);
 
         // Show QR overlay
+        // 🟢 Set receiver name
+        document.getElementById('qr-receiver-label').textContent = account.account_name;
+        // 🟢 Set amount name
+        document.getElementById('qr-pay-amount-label').textContent = amount + " ฿";
         document.getElementById('qr-overlay').style.display = 'flex';
         document.getElementById('qrcode').innerHTML = "";
 
