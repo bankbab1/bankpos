@@ -610,30 +610,35 @@
   ">
             <div style="font-size: 20px; font-weight: bold; margin-bottom: 15px;">ระบุบัญชีรับเงิน</div>
 
-            <select id="accountSelect" required style="
-    width: 100%;
-  padding: 12px 40px 12px 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-color: #fff;
-  background-image: url('data:image/svg+xml;utf8,<svg fill=%22%23333%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>');
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 18px;
-  box-sizing: border-box;
-
-  /* force text to stay inside field */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+            <!-- Wrapper for select + refresh button -->
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 20px;">
+                <select id="accountSelect" required style="
+        flex: 1;
+        padding: 12px 40px 12px 12px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        appearance: none;
+        background-color: #fff;
+        background-image: url('data:image/svg+xml;utf8,<svg fill=%22%23333%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 18px;
     ">
-                <option value="">Loading...</option>
-            </select>
+                    <option value="">Loading...</option>
+                </select>
+
+                <button id="refreshAccountsBtn" style="
+        padding: 10px 14px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background-color: #f0f0f0;
+        cursor: pointer;
+    ">
+                    🔄
+                </button>
+            </div>
 
 
             <div style="border-top: 1px solid #ccc; margin: 15px 0;"></div>
@@ -733,7 +738,7 @@
 
                 <!-- Confirm Payment Button -->
                 <button id="confirmScanpayBtn" class="btn btn-success" style="font-size: 18px; padding: 12px; flex: 1;"
-                    onclick="confirmQrPayment()" disabled>
+                    onclick="confirmQrPayment()">
                     ชำระแล้ว
                 </button>
             </div>
@@ -743,6 +748,55 @@
 
         </div>
     </div>
+
+
+
+    <div id="cashpay-overlay" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 12000;
+    justify-content: center;
+    align-items: center;
+">
+        <div style="
+        background: #fff;
+        padding: 25px 30px;
+        border-radius: 12px;
+        max-width: 350px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    ">
+            <div style="font-size: 20px; font-weight: bold; margin-bottom: 15px;">
+                กรุณารับเงินจากลูกค้า
+            </div>
+
+
+            <div style="font-size: 22px; margin-bottom: 20px; color: green; font-weight: bold; text-align: center;">
+                <span id="cashAmount">0 ฿</span>
+                <div style="margin-top: 10px;">
+                    <img src="cash_anim.gif" alt="Cash Animation" style="width: 200px; height: 200px;">
+                </div>
+            </div>
+
+
+
+
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn"
+                    style="font-size: 18px; padding: 12px; background-color: #dc3545; color: white; flex: 1;"
+                    onclick="backtoPaymentmethod()">ยกเลิก</button>
+
+                <button class="btn btn-success" style="font-size: 18px; padding: 12px; flex: 1;"
+                    onclick="confirmCashPayment()">ชำระแล้ว</button>
+            </div>
+        </div>
+    </div>
+
+
 
 
 </body>
@@ -1197,40 +1251,55 @@
         }
 
         if (selectedPayment === 'scan') {
-            document.getElementById('payment-method-overlay').style.display = 'none';
-            document.getElementById('scanpay-overlay').style.display = 'flex';
-            loadAccountsFromSheet();
-        } else if (selectedPayment === 'cash') {
-            cashPay();
-        }
-    }
-
-
-
-    function proceedPayment() {
-        if (!selectedPayment) {
-            alert('กรุณาเลือกวิธีชำระเงิน');
-            return;
-        }
-
-        if (selectedPayment === 'scan') {
             // Show account selection overlay instead of scanPay directly
             document.getElementById('payment-method-overlay').style.display = 'none';
             document.getElementById('scanpay-overlay').style.display = 'flex';
             loadAccountsFromSheet();
         } else if (selectedPayment === 'cash') {
-            cashPay();
+            // Hide payment method overlay
+            document.getElementById('payment-method-overlay').style.display = 'none';
+
+            // Show cash payment overlay
+            document.getElementById('cashpay-overlay').style.display = 'flex';
+
+            // Optionally, show the amount
+            const totalAmount = getCurrentTotalAmount(); // your function to get amount
+            document.getElementById('cashAmount').textContent = totalAmount;
         }
     }
 
+    function backToCheckoutFromCash() {
+        document.getElementById('cashpay-overlay').style.display = 'none';
+        document.getElementById('payment-method-overlay').style.display = 'flex';
+    }
+
+
+    function getCurrentTotalAmount() {
+        const label = document.getElementById('pay-amount-label');
+        if (!label) return 0;
+
+        // Extract numeric value from string (remove ฿ and commas)
+        const amountText = label.textContent.replace(/[^\d.]/g, '');
+        const amount = parseFloat(amountText);
+
+        return isNaN(amount) ? 0 : amount + ' ฿';
+    }
+
+
+
 
     let accountsData = []; // global storage for sheet accounts
+    const select = document.getElementById('accountSelect');
+    const confirmBtn = document.getElementById('confirmScanpayBtn');
+
+    // Attach change listener once
+    select.addEventListener('change', () => {
+        confirmBtn.disabled = (select.value === "");
+        select.style.borderColor = select.value === "" ? "#e74c3c" : "#ccc";
+    });
 
     // Load accounts from Google Sheet
     function loadAccountsFromSheet() {
-        const select = document.getElementById('accountSelect');
-        const confirmBtn = document.getElementById('confirmScanpayBtn');
-
         // show loading state
         select.innerHTML = '<option value="">Loading...</option>';
         confirmBtn.disabled = true;
@@ -1249,7 +1318,7 @@
                     select.appendChild(opt);
                 });
 
-                // ✅ auto select first account
+                // auto select first account
                 if (data.length > 0) {
                     select.value = data[0].display_name;
                     confirmBtn.disabled = false;
@@ -1261,17 +1330,12 @@
                 select.innerHTML = '<option value="">Error loading accounts</option>';
                 confirmBtn.disabled = true;
             });
-
-        // Handle manual changes too
-        select.addEventListener('change', () => {
-            confirmBtn.disabled = (select.value === "");
-            if (select.value === "") {
-                select.style.borderColor = "#e74c3c";
-            } else {
-                select.style.borderColor = "#ccc";
-            }
-        });
     }
+
+    // Attach refresh button
+    document.getElementById('refreshAccountsBtn').addEventListener('click', () => {
+        loadAccountsFromSheet();
+    });
 
 
 
@@ -1458,6 +1522,7 @@
     // Back button to payment method selection
     function backtoPaymentmethod() {
         document.getElementById('scanpay-overlay').style.display = 'none';
+        document.getElementById('cashpay-overlay').style.display = 'none';
         document.getElementById('payment-method-overlay').style.display = 'flex';
     }
 
