@@ -441,13 +441,17 @@
                 ส่วนลด: <span id="total-discount">0 ฿</span>
             </div>
 
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <!-- Cancel button -->
+                <button class="btn"
+                    style="font-size: 18px; padding: 12px; background-color: #dc3545; color: white; flex: 1;"
+                    onclick="closeCheckoutOverlay()">ยกเลิก</button>
 
-            <button class="btn btn-success" style="font-size: 18px; padding: 12px; margin-bottom: 10px;"
-                onclick="preparePayment()">ชำระเงิน</button>
+                <!-- Continue button -->
+                <button class="btn btn-success" style="font-size: 18px; padding: 12px; flex: 1;"
+                    onclick="preparePayment()">ถัดไป</button>
+            </div>
 
-            <!-- Cancel button -->
-            <button class="btn" style="font-size: 18px; padding: 12px; background-color: #dc3545; margin-top: 0;"
-                onclick="closeCheckoutOverlay()">ยกเลิก</button>
 
             <!-- Order Detail toggle button -->
             <div style="text-align:center;">
@@ -544,7 +548,7 @@
       text-align: center;
       box-shadow: 0 8px 20px rgba(0,0,0,0.25);
       ">
-            <div style="font-size: 22px; font-weight: bold; margin-bottom: 15px;">ยอดชำระจริง</div>
+            <div style="font-size: 20px; font-weight: bold; margin-bottom: 15px;">ยอดชำระจริง</div>
             <div style="font-size: 22px; margin-bottom: 20px; color: green; font-weight: bold">
                 <span id="pay-amount-label">0 ฿</span>
             </div>
@@ -566,16 +570,21 @@
 
             <!-- Separator -->
             <div style="border-top: 1px solid #ccc; margin: 15px 0;"></div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
 
-            <!-- Confirm Payment button -->
-            <button id="confirmPaymentBtn" class="btn btn-success"
-                style="font-size: 18px; padding: 12px; margin-bottom: 10px;" onclick="proceedPayment()" disabled>
-                ถัดไป
-            </button>
+                <!-- Cancel button -->
+                <button class="btn"
+                    style="font-size: 18px; padding: 12px; background-color: #dc3545; color: white; flex: 1;"
+                    onclick="backToCheckout()">ยกเลิก</button>
 
-            <!-- Cancel button -->
-            <button class="btn" style="font-size: 18px; padding: 12px; background-color: #dc3545; margin-top: 0;"
-                onclick="backToCheckout()">ยกเลิก</button>
+                <!-- Confirm Payment button -->
+                <button id="confirmPaymentBtn" class="btn btn-success" style="font-size: 18px; padding: 12px; flex: 1;"
+                    onclick="proceedPayment()" disabled>
+                    ถัดไป
+                </button>
+
+            </div>
+
 
         </div>
     </div>
@@ -599,9 +608,9 @@
       text-align: center;
       box-shadow: 0 8px 20px rgba(0,0,0,0.25);
   ">
-            <div style="font-size: 20px; font-weight: bold; margin-bottom: 15px;">Select Account</div>
+            <div style="font-size: 20px; font-weight: bold; margin-bottom: 15px;">ระบุบัญชีรับเงิน</div>
 
-            <select id="accountSelect" style="
+            <select id="accountSelect" required style="
     width: 100%;
   padding: 12px 40px 12px 12px;
   font-size: 16px;
@@ -629,13 +638,23 @@
 
             <div style="border-top: 1px solid #ccc; margin: 15px 0;"></div>
 
-            <button id="confirmScanpayBtn" class="btn btn-success"
-                style="font-size: 18px; padding: 12px; margin-bottom: 10px;" onclick="confirmScanpay()" disabled>
-                ชำระเงิน
-            </button>
+            <div style="display: flex; gap: 10px; justify-content: center;">
 
-            <button class="btn" style="font-size: 18px; padding: 12px; background-color: #dc3545; margin-top: 0;"
-                onclick="backtoPaymentmethod()">ยกเลิก</button>
+                <!-- Cancel button -->
+                <button class="btn"
+                    style="font-size: 18px; padding: 12px; background-color: #dc3545; color: white; flex: 1;"
+                    onclick="backtoPaymentmethod()">ยกเลิก</button>
+
+                <!-- Confirm Scanpay button -->
+                <button id="confirmScanpayBtn" class="btn btn-success" style="font-size: 18px; padding: 12px; flex: 1;"
+                    onclick="confirmScanpay()" disabled>
+                    ชำระเงิน
+                </button>
+
+            </div>
+
+
+
         </div>
     </div>
 
@@ -666,7 +685,7 @@
     ">
             <!-- Header (match Select Account style) -->
             <div style="font-size: 20px; font-weight: bold; margin-bottom: 15px;">
-                Scan to Pay
+                กรุณาสแกนเพื่อชำระเงิน
             </div>
 
             <!-- Thai QR Icon -->
@@ -674,11 +693,31 @@
                 <img src="th_qr_bar.png" alt="Thai QR Icon" style="width: 300px; height: auto;">
             </div>
 
+            <!-- Thai Promptpay Icon -->
+            <div style="text-align: center; margin-bottom: 10px;">
+                <img src="th_promptpay_logo.png" alt="Thai QR Icon" style="width: 85px; height: auto;">
+            </div>
+
             <!-- QR Code -->
-            <div id="qrcode" style="text-align: center;"></div>
+            <!-- <div id="qrcode" style="text-align: center;"></div> -->
+
+            <!-- QR Code wrapper -->
+            <div style="position: relative; display: inline-block; text-align: center;">
+                <div id="qrcode"></div>
+                <img src="inner_qr_icon.png" alt="QR Icon" style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 45px;   /* adjust size */
+            height: 45px;
+            transform: translate(-50%, -50%);
+            border-radius: 12px;  /* optional: rounded edges */
+         ">
+            </div>
+
 
             <!-- Receiver name -->
-            <div id="qr-receiver-label" style="font-size: 16px; color: #444; margin-top: 12px; margin-bottom: 4px;">
+            <div id="qr-receiver-label" style="font-size: 18px; color: #444; margin-top: 14px; margin-bottom: 4px;">
             </div>
 
             <!-- Amount display -->
@@ -686,10 +725,22 @@
                 style="font-size: 18px; font-weight: bold; margin-top: 15px; margin-bottom: 10px;">
             </div>
 
-            <!-- Button -->
-            <div style="text-align: center; margin-top: 15px;">
-                <button class="btn btn-success" onclick="closeQROverlay()">Close</button>
+            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 15px;">
+                <!-- Back Button -->
+                <button class="btn"
+                    style="font-size: 18px; padding: 12px; background-color: #dc3545; color: white; flex: 1;"
+                    onclick="closeQROverlay()">ยกเลิก</button>
+
+                <!-- Confirm Payment Button -->
+                <button id="confirmScanpayBtn" class="btn btn-success" style="font-size: 18px; padding: 12px; flex: 1;"
+                    onclick="confirmQrPayment()" disabled>
+                    ชำระแล้ว
+                </button>
             </div>
+
+
+
+
         </div>
     </div>
 
@@ -1178,12 +1229,18 @@
     // Load accounts from Google Sheet
     function loadAccountsFromSheet() {
         const select = document.getElementById('accountSelect');
-        select.innerHTML = '<option>Loading...</option>';
+        const confirmBtn = document.getElementById('confirmScanpayBtn');
+
+        // show loading state
+        select.innerHTML = '<option value="">Loading...</option>';
+        confirmBtn.disabled = true;
 
         fetch("https://script.google.com/macros/s/AKfycbwcRL3aFPHpc7V1QrerbdtWfaDF2C3P9ty8LMpHPifRfArNAmwd7TN29cCkEK3JXQ87xQ/exec")
             .then(res => res.json())
             .then(data => {
-                accountsData = data; // store full data
+                accountsData = data;
+
+                // clear and populate options
                 select.innerHTML = '';
                 data.forEach(acc => {
                     let opt = document.createElement('option');
@@ -1191,13 +1248,32 @@
                     opt.textContent = acc.display_name;
                     select.appendChild(opt);
                 });
-                document.getElementById('confirmScanpayBtn').disabled = false;
+
+                // ✅ auto select first account
+                if (data.length > 0) {
+                    select.value = data[0].display_name;
+                    confirmBtn.disabled = false;
+                    select.style.borderColor = "#ccc";
+                }
             })
             .catch(err => {
                 console.error(err);
-                select.innerHTML = '<option>Error loading accounts</option>';
+                select.innerHTML = '<option value="">Error loading accounts</option>';
+                confirmBtn.disabled = true;
             });
+
+        // Handle manual changes too
+        select.addEventListener('change', () => {
+            confirmBtn.disabled = (select.value === "");
+            if (select.value === "") {
+                select.style.borderColor = "#e74c3c";
+            } else {
+                select.style.borderColor = "#ccc";
+            }
+        });
     }
+
+
 
     // Confirm Scanpay and generate QR
     function confirmScanpay() {
@@ -1250,7 +1326,7 @@
         // 🟢 Set receiver name
         document.getElementById('qr-receiver-label').textContent = account.account_name;
         // 🟢 Set amount name
-        document.getElementById('qr-pay-amount-label').textContent = amount + " ฿";
+        document.getElementById('qr-pay-amount-label').textContent = amount + " บาท";
         document.getElementById('qr-overlay').style.display = 'flex';
         document.getElementById('qrcode').innerHTML = "";
 
