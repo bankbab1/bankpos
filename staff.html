@@ -13,7 +13,8 @@
             justify-content: center;
             background: #007bff;
             color: #fff;
-            height: 48px; /* or whatever exact height you want */
+            height: 48px;
+            /* or whatever exact height you want */
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
 
@@ -40,7 +41,15 @@
             font-family: Arial, sans-serif;
             background: #f0f2f5;
             margin: 0;
+            /* remove padding from body */
         }
+
+        .container {
+            padding-left: 20px;
+            padding-right: 20px;
+            /* remove top/bottom padding */
+        }
+
 
         h2,
         h3 {
@@ -408,56 +417,87 @@
 
     <!-- Add in <head> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <div class="container">
+        <div class="section">
+            <label class="staff-label"><i class="fa-solid fa-user"></i> ผู้ขาย :</label>
+            <!-- Wrapper for select + refresh button -->
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 20px;">
+                <select id="staff" required style="
+            flex: 1;
+            padding: 12px 40px 12px 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            appearance: none;
+            background-color: #fff;
+            background-image: url('data:image/svg+xml;utf8,<svg fill=%22%23333%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 18px;
+        ">
+                    <option value="" disabled selected>Loading...</option>
+                </select>
 
-    <!-- HTML -->
-    <div class="section">
-        <label class="staff-label"><i class="fa-solid fa-user"></i> ผู้ขาย :</label>
-        <input type="text" id="staff" placeholder="ระบุชื่อผู้ขาย" required>
+                <button id="refreshStaffBtn" style="
+            border:none;
+            background:none;
+            cursor:pointer;
+            font-size:1.2rem;
+            color:#007bff;
+            transition:0.2s;
+        ">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+            </div>
+        </div>
     </div>
+
 
 
 
     <!-- Item entry section -->
-    <div class="section">
-        <label class="item-label"><i class="fa-solid fa-box"></i> สินค้า :</label>
-        <input type="text" id="item" placeholder="ระบุสินค้าที่ขาย" required>
+    <div class="container">
+        <div class="section">
+            <label class="item-label"><i class="fa-solid fa-box"></i> สินค้า :</label>
+            <input type="text" id="item" placeholder="ระบุสินค้าที่ขาย" required>
 
-        <label class="item-label"><i class="fa-solid fa-hashtag"></i> จำนวน :</label>
-        <input type="number" id="qty" placeholder="จำนวน" min="1" required>
+            <label class="item-label"><i class="fa-solid fa-hashtag"></i> จำนวน :</label>
+            <input type="number" id="qty" placeholder="จำนวน" min="1" required>
 
-        <label class="item-label"><i class="fa-solid fa-money-bill"></i> ราคา (ต่อชิ้น) :</label>
-        <input type="number" id="price" placeholder="ราคา" min="1" required>
+            <label class="item-label"><i class="fa-solid fa-money-bill"></i> ราคา (ต่อชิ้น) :</label>
+            <input type="number" id="price" placeholder="ราคา" min="1" required>
 
-        <button class="btn btn-add" onclick="addToCart()">เพิ่ม</button>
+            <button class="btn btn-add" onclick="addToCart()">เพิ่ม</button>
+        </div>
     </div>
-
-    <!-- Cart section -->
-    <div class="section">
-        <!-- Cart section header with centered title and right-aligned bin icon -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <div style="flex:1;"></div> <!-- empty left space -->
-            <h4 style="margin:0; text-align:center; flex:1;">รายการสินค้า</h4>
-            <!-- Trash icon aligned right -->
-            <div style="flex:1; text-align:right; cursor:pointer;" onclick="clearCart()">
-                <i class="fa-solid fa-trash" style="font-size:18px; color:#dc3545;"></i>
+    <div class="container">
+        <!-- Cart section -->
+        <div class="section">
+            <!-- Cart section header with centered title and right-aligned bin icon -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="flex:1;"></div> <!-- empty left space -->
+                <h4 style="margin:0; display:inline-block;">รายการสินค้า</h4>
+                <!-- Trash icon aligned right -->
+                <div style="flex:1; text-align:right; cursor:pointer;" onclick="clearCart()">
+                    <i class="fa-solid fa-trash" style="font-size:18px; color:#dc3545;"></i>
+                </div>
             </div>
+
+
+            <div id="cart">
+                <div id="cart-staff" style="font-weight:bold; margin-bottom:10px;"></div>
+                <!-- Item cards will go here -->
+            </div>
+
+            <div id="total-summary"
+                style="font-size: 22px; font-weight: bold; text-align: right; margin-bottom: 10px; padding-bottom: 5px;">
+                <span style="color: #555;">ยอดที่ต้องชำระ :</span>
+                <span id="total-amount" style="color: #28a745">0 ฿</span>
+            </div>
+
+            <button class="btn btn-success" onclick="checkout()">สรุปรายการ</button>
         </div>
-
-
-        <div id="cart">
-            <div id="cart-staff" style="font-weight:bold; margin-bottom:10px;"></div>
-            <!-- Item cards will go here -->
-        </div>
-
-        <div id="total-summary"
-            style="font-size: 22px; font-weight: bold; text-align: right; margin-bottom: 10px; padding-bottom: 5px;">
-            <span style="color: #555;">ยอดที่ต้องชำระ :</span>
-            <span id="total-amount" style="color: #28a745">0 ฿</span>
-        </div>
-
-        <button class="btn btn-success" onclick="checkout()">สรุปรายการ</button>
     </div>
-
 
 
 
@@ -1048,6 +1088,37 @@
 
 
 
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwcRL3aFPHpc7V1QrerbdtWfaDF2C3P9ty8LMpHPifRfArNAmwd7TN29cCkEK3JXQ87xQ/exec';
+    const staffSelect = document.getElementById('staff');
+    const refreshBtn = document.getElementById('refreshStaffBtn');
+
+    function loadStaffDropdown() {
+        staffSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+        fetch(`${WEB_APP_URL}?sheet=staff1`)
+            .then(res => res.json())
+            .then(data => {
+                staffSelect.innerHTML = '<option value="" disabled selected>เลือกผู้ขาย</option>';
+                data.forEach(staff => {
+                    if (staff.staff_name) {
+                        const option = document.createElement('option');
+                        option.value = staff.staff_name;
+                        option.textContent = staff.staff_name;
+                        staffSelect.appendChild(option);
+                    }
+                });
+            })
+            .catch(err => {
+                console.error('Error fetching staff:', err);
+                staffSelect.innerHTML = '<option value="" disabled>Error loading staff</option>';
+            });
+    }
+
+    // Initial load
+    loadStaffDropdown();
+
+    // Refresh button
+    refreshBtn.addEventListener('click', loadStaffDropdown);
+
     function clearCart() {
         const cart = document.getElementById('cart');
         cart.querySelectorAll('.cart-card').forEach(card => card.remove());
@@ -1523,7 +1594,6 @@
     });
 
 
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwcRL3aFPHpc7V1QrerbdtWfaDF2C3P9ty8LMpHPifRfArNAmwd7TN29cCkEK3JXQ87xQ/exec'; // replace with your URL
 
     // Load accounts from Google Sheet
     function loadAccountsFromSheet() {
