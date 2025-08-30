@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bank POS - Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f7f9fc;
+            color: #333;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Header bar */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #007bff;
+            color: #fff;
+            height: 48px; /* or whatever exact height you want */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Back button */
+        .back-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px 16px 0 16px;
+        }
+
+        .back-btn {
+            min-width: 75px; /* or any width that fits both buttons */
+            background: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
+        }
+
+        /* Page content */
+        .container {
+            padding: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            color: #444;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #fff;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-green {
+            background: #28a745;
+        }
+
+        .btn-blue {
+            background: #007bff;
+        }
+
+        .btn-purple {
+            background: #6f42c1;
+        }
+
+        .btn-orange {
+            background: #fd7e14;
+        }
+
+        .date-range {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input[type="date"] {
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .setup-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .setup-item {
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .setup-item:hover {
+            background: #e2e8f0;
+        }
+
+        .setup-item i {
+            font-size: 1.2rem;
+            color: #007bff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <h1><i class="fa-solid fa-user-shield"></i> Admin Panel</h1>
+    </div>
+
+    <!-- Back button under header -->
+    <div class="back-wrapper">
+        <button class="back-btn" onclick="location.href='index.html'">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+    </div>
+
+    <div class="container">
+        <!-- Sales Report -->
+        <div class="card">
+            <h2><i class="fa-solid fa-chart-line"></i> Sales Report</h2>
+            <div class="btn-group">
+                <button class="btn btn-green">Daily Sales</button>
+                <button class="btn btn-blue">Weekly Sales</button>
+                <button class="btn btn-purple">Monthly Sales</button>
+            </div>
+            <div class="date-range">
+                <label for="start-date"><i class="fa-solid fa-calendar-day"></i> Specify Range:</label>
+                <input type="date" id="start-date">
+                <input type="date" id="end-date">
+                <button class="btn btn-orange">Generate Report</button>
+            </div>
+        </div>
+
+        <!-- Setup & Config -->
+        <div class="card">
+            <h2><i class="fa-solid fa-gear"></i> Setup & Config</h2>
+            <div class="setup-list">
+                <div class="setup-item" onclick="location.href='admin_setting_staff.html'">
+                    <span><i class="fa-solid fa-user"></i> Staff</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+                <div class="setup-item" onclick="location.href='admin_setting_bank.html'">
+                    <span><i class="fa-solid fa-building-columns"></i> Bank Account</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+
+
+</body>
+
+</html>
