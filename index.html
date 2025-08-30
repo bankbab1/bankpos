@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Bank POS - เลือกโหมด</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f7f9fc;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      margin-bottom: 40px;
+      color: #333;
+    }
+    .mode-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .mode-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+    .staff-btn {
+      background: #28a745;
+      color: #fff;
+    }
+    .admin-btn {
+      background: #007bff;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1><i class="fa-solid fa-building-columns"></i> Bank POS</h1>
+
+  <button class="mode-btn staff-btn" onclick="location.href='staff.html'">
+    <i class="fa-solid fa-user"></i> Staff
+  </button>
+
+  <button class="mode-btn admin-btn" onclick="location.href='admin.html'">
+    <i class="fa-solid fa-user-shield"></i> Admin
+  </button>
+</body>
+</html>
