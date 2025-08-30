@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bank POS - Staff Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f7f9fc;
+            color: #333;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Header bar */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #007bff;
+            color: #fff;
+            height: 48px; /* or whatever exact height you want */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Back button */
+        .back-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px 16px 0 16px;
+        }
+
+        .back-btn {
+            min-width: 75px; /* or any width that fits both buttons */
+            background: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
+        }
+
+        /* Page content */
+        .container {
+            padding: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 0px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            color: #444;
+        }
+
+        .staff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .staff-item {
+            padding: 12px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <h1><i class="fa-solid fa-user"></i> Staff Management</h1>
+    </div>
+
+    <!-- Back button under header -->
+    <div class="back-wrapper">
+        <button class="back-btn" onclick="location.href='admin.html'">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header"
+                style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+                <h2 style="margin:0;"><i class="fa-solid fa-users"></i> Staff List</h2>
+                <button id="refresh-btn" style="
+        border:none;
+        background:none;
+        cursor:pointer;
+        font-size:1.2rem;
+        color:#007bff;
+        transition:0.2s;
+    " title="Refresh staff list">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+            </div>
+
+            <div class="staff-list" id="staff-list">
+                Loading staff data...
+            </div>
+        </div>
+    </div>
+
+    <!-- Add button under staff list aligned like Back button -->
+    <div class="back-wrapper" style="padding-top: 0;">
+        <button id="add-staff-btn" class="back-btn" style="background:#007bff;">
+            <i class="fa-solid fa-plus"></i> Add
+        </button>
+    </div>
+
+    <div id="staff-overlay" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(2px);
+    z-index:10000;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+">
+        <div style="
+        background:#fff;
+        padding:25px 30px;
+        border-radius:10px;
+        max-width:350px;
+        width:100%;
+        text-align:center;
+        box-shadow:0 8px 20px rgba(0,0,0,0.25);
+        display:flex;
+        flex-direction:column;
+        gap:10px; /* reduced from 20px */
+    ">
+            <h3 id="overlay-title" style="font-size:20px; font-weight:bold; margin:0;"></h3>
+            <div id="overlay-name" style="font-size:16px; margin:2px 0 10px 0; color:#555;"></div>
+
+            <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+                <input type="text" id="overlay-input"
+                    style="height:52px; font-size:16px; border-radius:10px; border:1px solid #ccc; width:100%; padding:0 12px; box-sizing:border-box; margin-bottom: 15px;">
+
+                <div style="display:flex; gap:10px;">
+                    <button id="overlay-cancel"
+                        style="font-size:18px; padding:12px; flex:1; background:#dc3545; color:white; border:none; border-radius:10px; cursor:pointer;">
+                        Cancel
+                    </button>
+                    <button id="overlay-confirm"
+                        style="font-size:18px; padding:12px; flex:1; background:#28a745; color:white; border:none; border-radius:10px; cursor:pointer;">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Loading Overlay for Adding Staff -->
+    <div id="loading-overlay" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(2px);
+    z-index:13500;
+    justify-content:center;
+    align-items:center;
+">
+        <div style="
+        background:#fff;
+        padding:20px 30px;
+        border-radius:10px;
+        text-align:center;
+        box-shadow:0 8px 20px rgba(0,0,0,0.25);
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:15px;
+    ">
+            <div class="spinner" style="
+            border:4px solid #f3f3f3;
+            border-top:4px solid #007bff;
+            border-radius:50%;
+            width:40px;
+            height:40px;
+            animation: spin 1s linear infinite;
+        "></div>
+            <div style="font-size:18px; font-weight:bold;">กำลังบันทึก...</div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <!-- Success Overlay -->
+    <div id="success-overlay" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(2px);
+    z-index:14000;
+    justify-content:center;
+    align-items:center;
+">
+        <div style="
+        background:#fff;
+        padding:20px 30px;
+        border-radius:10px;
+        text-align:center;
+        box-shadow:0 8px 20px rgba(0,0,0,0.25);
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:15px;
+    ">
+            <div style="font-size:18px; font-weight:bold;" id="success-message"></div>
+            <div style="font-size:16px; color:#555;" id="success-order-id"></div>
+            <button onclick="document.getElementById('success-overlay').style.display='none'"
+                style="margin-top:10px; padding:10px 20px; border:none; border-radius:8px; background:#007bff; color:#fff; cursor:pointer;">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <!-- Failure Overlay -->
+    <div id="failure-overlay" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(2px);
+    z-index:14000;
+    justify-content:center;
+    align-items:center;
+">
+        <div style="
+        background:#fff;
+        padding:20px 30px;
+        border-radius:10px;
+        text-align:center;
+        box-shadow:0 8px 20px rgba(0,0,0,0.25);
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:15px;
+    ">
+            <div style="font-size:18px; font-weight:bold; color:#dc3545;" id="failure-message"></div>
+            <button onclick="document.getElementById('failure-overlay').style.display='none'"
+                style="margin-top:10px; padding:10px 20px; border:none; border-radius:8px; background:#dc3545; color:#fff; cursor:pointer;">
+                OK
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwcRL3aFPHpc7V1QrerbdtWfaDF2C3P9ty8LMpHPifRfArNAmwd7TN29cCkEK3JXQ87xQ/exec';
+        const staffList = document.getElementById('staff-list');
+
+        // Function to load staff list
+        function loadStaffList() {
+            staffList.innerHTML = 'Loading staff data...';
+            fetch(`${WEB_APP_URL}?sheet=staff1`)
+                .then(response => response.json())
+                .then(data => {
+                    staffList.innerHTML = ''; // clear loading text
+                    data.forEach((staff, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'staff-item';
+
+                        const nameSpan = document.createElement('span');
+                        nameSpan.textContent = staff.staff_name;
+                        div.appendChild(nameSpan);
+
+                        const btnContainer = document.createElement('div');
+                        btnContainer.style.display = 'flex';
+                        btnContainer.style.gap = '8px';
+
+                        // Edit button
+                        const editBtn = document.createElement('button');
+                        editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> Edit';
+                        editBtn.style.cssText = 'padding:6px 12px;border:none;border-radius:8px;background-color:#4CAF50;color:#fff;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:0.2s;';
+                        editBtn.onmouseover = () => editBtn.style.backgroundColor = '#45a049';
+                        editBtn.onmouseout = () => editBtn.style.backgroundColor = '#4CAF50';
+                        editBtn.onclick = () => editStaff(index, staff.staff_name);
+                        btnContainer.appendChild(editBtn);
+
+                        // Delete button
+                        const delBtn = document.createElement('button');
+                        delBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete';
+                        delBtn.style.cssText = 'padding:6px 12px;border:none;border-radius:8px;background-color:#f44336;color:#fff;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:0.2s;';
+                        delBtn.onmouseover = () => delBtn.style.backgroundColor = '#d32f2f';
+                        delBtn.onmouseout = () => delBtn.style.backgroundColor = '#f44336';
+                        delBtn.onclick = () => deleteStaff(index, staff.staff_name);
+                        btnContainer.appendChild(delBtn);
+
+                        div.appendChild(btnContainer);
+                        staffList.appendChild(div);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching staff data:', error);
+                    staffList.innerHTML = 'Failed to load staff data';
+                });
+        }
+
+        const overlay = document.getElementById('staff-overlay');
+        const overlayTitle = document.getElementById('overlay-title');
+        const overlayInput = document.getElementById('overlay-input');
+        const overlayName = document.getElementById('overlay-name');
+        const overlayCancel = document.getElementById('overlay-cancel');
+        const overlayConfirm = document.getElementById('overlay-confirm');
+
+        let currentAction = null;
+        let currentIndex = null;
+        let currentName = null;
+
+        function showOverlay(action, index, name) {
+            currentAction = action;
+            currentIndex = index;
+            currentName = name;
+
+            if (action === 'edit') {
+                overlayTitle.textContent = 'Edit staff name:';
+                overlayName.textContent = name;
+                overlayInput.style.display = 'block';
+                overlayInput.value = name;
+            } else if (action === 'delete') {
+                overlayTitle.textContent = 'Delete staff:';
+                overlayName.textContent = name + '?';
+                overlayInput.style.display = 'none';
+            } else if (action === 'add') {
+                overlayTitle.textContent = 'Add new staff:';
+                overlayName.textContent = '';
+                overlayInput.style.display = 'block';
+                overlayInput.value = '';
+            }
+
+            overlay.style.display = 'flex';
+        }
+
+        overlayCancel.onclick = () => overlay.style.display = 'none';
+
+        overlayConfirm.onclick = () => {
+            overlay.style.display = 'none';
+            const loadingEl = document.getElementById('loading-overlay');
+            const actionName = overlayInput.value.trim();
+
+            if (currentAction === 'edit') {
+                if (!actionName) return;
+                loadingEl.style.display = 'flex';
+
+                fetch(`${WEB_APP_URL}?action=editStaff&row=${currentIndex + 2}&newName=${encodeURIComponent(actionName)}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        loadingEl.style.display = 'none';
+                        if (res.success) loadStaffList();
+                        else alert("Failed to update: " + res.error);
+                    })
+                    .catch(err => {
+                        loadingEl.style.display = 'none';
+                        console.error('Error editing staff:', err);
+                        alert('Error editing staff: ' + err);
+                    });
+            } else if (currentAction === 'delete') {
+                loadingEl.style.display = 'flex';
+                const timeoutId = setTimeout(() => {
+                    loadingEl.style.display = 'none';
+                    document.getElementById('failure-message').textContent = 'ไม่สามารถลบรายการได้: โปรดตรวจสอบการเชื่อมต่อและลองใหม่';
+                    document.getElementById('failure-overlay').style.display = 'flex';
+                }, 15000);
+
+                fetch(`${WEB_APP_URL}?action=deleteStaff&row=${currentIndex + 2}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        clearTimeout(timeoutId);
+                        loadingEl.style.display = 'none';
+                        if (res.success) {
+                            loadStaffList();
+                            document.getElementById('success-message').textContent = 'ลบรายการสำเร็จ!';
+                            document.getElementById('success-order-id').textContent = "Staff: " + currentName;
+                            document.getElementById('success-overlay').style.display = 'flex';
+                        } else {
+                            document.getElementById('failure-message').textContent = "Failed to delete: " + res.error;
+                            document.getElementById('failure-overlay').style.display = 'flex';
+                        }
+                    })
+                    .catch(err => {
+                        clearTimeout(timeoutId);
+                        loadingEl.style.display = 'none';
+                        console.error('Error deleting staff:', err);
+                        document.getElementById('failure-message').textContent = 'Error deleting staff: ' + err;
+                        document.getElementById('failure-overlay').style.display = 'flex';
+                    });
+            } else if (currentAction === 'add') {
+                if (!actionName) return;
+                loadingEl.style.display = 'flex';
+                const timeoutId = setTimeout(() => {
+                    loadingEl.style.display = 'none';
+                    document.getElementById('failure-message').textContent = 'ไม่สามารถบันทึกรายการได้: โปรดตรวจสอบการเชื่อมต่อและลองใหม่';
+                    document.getElementById('failure-overlay').style.display = 'flex';
+                }, 15000);
+
+                fetch(`${WEB_APP_URL}?action=addStaff&newName=${encodeURIComponent(actionName)}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        clearTimeout(timeoutId);
+                        loadingEl.style.display = 'none';
+                        if (res.success) {
+                            loadStaffList();
+                            document.getElementById('success-message').textContent = 'บันทึกรายการสำเร็จ!';
+                            document.getElementById('success-order-id').textContent = "Staff: " + actionName;
+                            document.getElementById('success-overlay').style.display = 'flex';
+                        } else {
+                            document.getElementById('failure-message').textContent = "Failed to add: " + res.error;
+                            document.getElementById('failure-overlay').style.display = 'flex';
+                        }
+                    })
+                    .catch(err => {
+                        clearTimeout(timeoutId);
+                        loadingEl.style.display = 'none';
+                        console.error('Error adding staff:', err);
+                        document.getElementById('failure-message').textContent = 'Error adding staff: ' + err;
+                        document.getElementById('failure-overlay').style.display = 'flex';
+                    });
+            }
+        };
+
+        // Edit / Delete helper functions
+        function editStaff(index, name) {
+            showOverlay('edit', index, name);
+        }
+
+        function deleteStaff(index, name) {
+            showOverlay('delete', index, name);
+        }
+
+        const addBtn = document.getElementById('add-staff-btn');
+        addBtn.onclick = () => showOverlay('add');
+
+        // Refresh button
+        const refreshBtn = document.getElementById('refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.onclick = () => {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin"></i>';
+                loadStaffList();
+                setTimeout(() => {
+                    refreshBtn.disabled = false;
+                    refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
+                }, 1000);
+            };
+        }
+
+        // Initial load
+        loadStaffList();
+    </script>
+
+
+
+</body>
+
+</html>
