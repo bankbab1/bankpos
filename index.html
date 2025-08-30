@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Bank POS - เลือกโหมด</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ✅ Mobile scaling -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
@@ -14,29 +15,34 @@
       justify-content: center;
       background: #f7f9fc;
       font-family: Arial, sans-serif;
+      padding: 20px;
+      box-sizing: border-box;
     }
     h1 {
       margin-bottom: 40px;
       color: #333;
+      text-align: center;
+      font-size: 1.8rem;
     }
     .mode-btn {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      padding: 15px 30px;
-      margin: 10px;
-      font-size: 18px;
+      padding: 16px;
+      margin: 10px 0;
+      font-size: 1.1rem;
       font-weight: bold;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s ease-in-out;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 100%;           /* ✅ Full width on mobile */
+      max-width: 320px;      /* ✅ Limit for tablets/desktop */
     }
-    .mode-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    .mode-btn:active {
+      transform: scale(0.98); /* ✅ Nice tap feedback */
     }
     .staff-btn {
       background: #28a745;
